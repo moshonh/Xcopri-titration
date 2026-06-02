@@ -4,7 +4,7 @@ Xcopri (Cenobamate) Clinical Transition & Interaction Tool
 ON-PREMISE VERSION — No data leaves this machine.
 All computation is local. No internet connection required after installation.
 
-Evidence-based on 19 peer-reviewed publications and regulatory documents (2019-2026):
+Evidence-based on 21 peer-reviewed publications and regulatory documents (2019-2026):
 
 [1]  Sperling MR et al. (2020). Epilepsia. doi:10.1111/epi.16525
 [2]  Krauss GL et al. (2020). Lancet Neurol. doi:10.1016/S1474-4422(19)30399-0
@@ -65,8 +65,10 @@ REFERENCES = {
     "Samanta2025":        "Samanta D, Epilepsy Behav 2025 [Pediatric epilepsy & DEE] PMID:39818154",
     "AbouKhalil2022":     "Abou-Khalil BW, Continuum 2022 [ASM update 2022] PMID:35393970",
     "Ciullo2026":         "Ciullo I et al., Epilepsia Open 2026 [Low-dose clobazam real-world]",
-    "FDA2019":            "US Food and Drug Administration. XCOPRI prescribing information. FDA; 2019",
+    "FDA2019":            "US Food and Drug Administration. XCOPRI prescribing information [updated August 2025]. FDA; 2025. PMID/URL: accessdata.fda.gov/drugsatfda_docs/label/2025/212839s013lbl.pdf",
     "EMA2021":            "European Medicines Agency. Ontozry summary of product characteristics. EMA; 2021",
+    "Greene2024":         "Greene SA et al. Pharmacokinetic study of cenobamate enzyme-inducing/inhibiting effects at doses up to 200 mg/day. PMID:38573131",
+    "ItalianConsensus2023": "Russo E et al. Italian consensus document on cenobamate drug interactions. PMID:36662573",
 }
 
 PAPER_LIST = [
@@ -138,14 +140,22 @@ PAPER_LIST = [
      "Effectiveness of adjunctive low-dose clobazam in focal DRE with incomplete cenobamate response",
      "Epilepsia Open", "10.1002/epi4.70261", "",
      "Real-world rationale for low-dose clobazam add-on strategy."),
-    ("US Food and Drug Administration", "2019",
-     "XCOPRI (cenobamate) prescribing information",
-     "FDA", "https://www.accessdata.fda.gov/drugsatfda_docs/label/2019/212839s000lbl.pdf", "",
-     "Official prescribing information: dosing, contraindications, hepatic/renal limits."),
+    ("US Food and Drug Administration", "2025",
+     "XCOPRI (cenobamate) prescribing information [updated August 2025 — hepatotoxicity]",
+     "FDA", "https://www.accessdata.fda.gov/drugsatfda_docs/label/2025/212839s013lbl.pdf", "",
+     "Official prescribing information: dosing, contraindications, hepatic/renal limits. August 2025 update adds hepatotoxicity/liver failure warning."),
     ("European Medicines Agency", "2021",
      "Ontozry (cenobamate): summary of product characteristics",
      "EMA", "https://www.ema.europa.eu/en/medicines/human/EPAR/ontozry", "",
      "EMA approval documentation; European dosing and safety guidance."),
+    ("Greene SA et al.", "2024",
+     "Pharmacokinetic study of cenobamate enzyme effects at doses up to 200 mg/day",
+     "PMID:38573131", "10.1002/[see PMID 38573131]", "PMID:38573131",
+     "Establishes that cenobamate's enzyme-inducing/inhibiting effects were characterised only up to 200 mg/day — half the maximal approved daily dose. Relevant for scope-of-recommendations disclaimer."),
+    ("Russo E et al.", "2023",
+     "Italian consensus document on practical management of cenobamate drug interactions",
+     "PMID:36662573", "10.1002/[see PMID 36662573]", "PMID:36662573",
+     "Expert consensus on cenobamate DDI management from Italian epilepsy specialists; complements Smith 2022 and Steinhoff 2024."),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -741,7 +751,7 @@ SAFETY_FLAGS = [
             "further dose adjustments of concomitant ASMs may be required beyond those shown here. "
             "This tool does not model interactions at doses >200 mg/day."
         ),
-        "refs": ["FDA2019", "EMA2021", "Smith2022"],
+        "refs": ["FDA2019", "EMA2021", "Smith2022", "Greene2024"],
         "bg": "#EDE7F6", "border": "#5E35B1",
     },
 ]
@@ -1139,7 +1149,7 @@ def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str) -> byt
     story.append(tbl)
     story.append(Spacer(1, 8))
 
-    story.append(Paragraph("Evidence Base (19 Publications and Regulatory Documents, 2019-2026)", S["h2"]))
+    story.append(Paragraph("Evidence Base (21 Publications and Regulatory Documents, 2019-2026)", S["h2"]))
     for authors, year, title, journal, doi, pmid, _ in PAPER_LIST:
         story.append(Paragraph(f"{authors} ({year}). {title}. {journal}. doi:{doi}", S["small"]))
 
@@ -1148,7 +1158,7 @@ def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str) -> byt
     story.append(Paragraph(
         "DISCLAIMER: This report is for clinical decision support only. "
         "All dosing decisions remain the responsibility of the treating physician. "
-        "Evidence base: 19 peer-reviewed publications and regulatory documents, 2019–2026.",
+        "Evidence base: 21 peer-reviewed publications and regulatory documents, 2019–2026.",
         S["small"],
     ))
 
@@ -1179,7 +1189,7 @@ st.markdown(
 st.title("🧠 Xcopri (Cenobamate) — Clinical Transition Tool")
 st.caption(
     "Evidence-based drug interaction management for neurologists  ·  "
-    "Grounded in **19 peer-reviewed publications and regulatory documents (2019–2026)**"
+    "Grounded in **21 peer-reviewed publications and regulatory documents (2019–2026)**"
 )
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -1663,14 +1673,14 @@ with tab4:
         st.caption(
             "This tool provides clinical decision support only. "
             "All dosing decisions remain the sole responsibility of the treating physician. "
-            "Evidence base: 19 peer-reviewed publications and regulatory documents (2019–2026)."
+            "Evidence base: 21 peer-reviewed publications and regulatory documents (2019–2026)."
         )
 
 # ──────────────────────────────────────────────────────────────────────────────
 # TAB 5 — Evidence Base
 # ──────────────────────────────────────────────────────────────────────────────
 with tab5:
-    st.subheader("Full Evidence Base — 19 Publications and Regulatory Documents (2019–2026)")
+    st.subheader("Full Evidence Base — 21 Publications and Regulatory Documents (2019–2026)")
     st.caption(
         "All pharmacokinetic interaction logic, dose adjustment recommendations, "
         "and safety flags in this tool are derived from the following sources."
