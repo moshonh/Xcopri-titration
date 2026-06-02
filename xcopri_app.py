@@ -1012,8 +1012,9 @@ def build_df(selected_frozen: tuple) -> pd.DataFrame:
 def build_me_df(selected_frozen: tuple, df_json: str, taper_drug: str = None) -> pd.DataFrame:
     """
     AM/PM dose breakdown.
-    Computes taper drug AM/PM directly from selected_frozen data (avoids JSON key issues
-    with emoji characters in column names). Regular drug AM/PM parsed from df.
+    Computes ALL drugs directly from source data to avoid parsing issues with
+    tablet-split strings like '27½ mg (55 mg tablet, split) (↓25%)'.
+    Only the Week column is taken from df for row ordering.
     """
     df = pd.read_json(io.StringIO(df_json))
     selected = {drug: {"dose": dose, "serum": serum} for drug, dose, serum in selected_frozen}
@@ -1021,41 +1022,57 @@ def build_me_df(selected_frozen: tuple, df_json: str, taper_drug: str = None) ->
     for i, (_, row) in enumerate(df.iterrows()):
         r = {"Week": row["Week"], "Xcopri — Evening": row["Xcopri (Cenobamate)"]}
 
-        # Taper drug: compute directly from source data (bypass JSON key issues)
+        # Taper drug — compute directly from taper schedule
         if taper_drug and taper_drug in selected:
             base = float(selected[taper_drug].get("dose") or 0)
             val  = taper_dose_str(taper_drug, base, i)
             if val == "D/C":
                 r[f"{taper_drug} — AM"] = "D/C"
                 r[f"{taper_drug} — PM"] = "D/C"
-            elif "mg" in val:
+            elif base > 0:
+                # Extract numeric mg value from taper string
                 try:
-                    mg   = int(val.split(" mg")[0].strip())
-                    half = mg // 2
-                    r[f"{taper_drug} — AM"] = f"{half} mg"
-                    r[f"{taper_drug} — PM"] = f"{mg - half} mg"
+                    mg   = float(val.split(" mg")[0].replace("½", ".5").strip())
+                    half = mg / 2
+                    fmt  = lambda v: f"{int(v)} mg" if v == int(v) else f"{v} mg"
+                    r[f"{taper_drug} — AM"] = fmt(half)
+                    r[f"{taper_drug} — PM"] = fmt(mg - half)
                 except Exception:
                     r[f"{taper_drug} — AM"] = val
                     r[f"{taper_drug} — PM"] = "—"
             else:
-                r[f"{taper_drug} — AM"] = val
+                r[f"{taper_drug} — AM"] = "—"
                 r[f"{taper_drug} — PM"] = "—"
 
-        # Regular drugs: parse from df row
+        # Regular drugs — compute directly from adjusted dose (not parsed from df text)
         for drug in selected:
             if drug == taper_drug:
                 continue
-            val = str(row.get(drug, "—"))
-            if "mg" in val and "Switch" not in val and val != "—":
-                try:
-                    mg   = int(val.split(" mg")[0].strip())
-                    half = mg // 2
-                    r[f"{drug} — AM"] = f"{half} mg"
-                    r[f"{drug} — PM"] = f"{mg - half} mg"
-                except Exception:
-                    r[drug] = val
-            else:
-                r[drug] = val
+            base = float(selected[drug].get("dose") or 0)
+            if not base:
+                r[f"{drug} — AM"] = "—"
+                r[f"{drug} — PM"] = "—"
+                continue
+            pct = DRUG_DB[drug]["pct_per_period"][i]
+            dose_str = compute_dose(base, pct, drug)
+
+            if "Switch" in dose_str or "REVIEW" in dose_str or dose_str == "—":
+                r[drug] = dose_str
+                continue
+
+            # Extract the leading numeric mg value cleanly
+            try:
+                # handles "30 mg (↓25%)", "27½ mg (...)", "20 mg"
+                numeric_part = dose_str.split(" mg")[0].replace("½", ".5").strip()
+                mg   = float(numeric_part)
+                half = mg / 2
+                fmt  = lambda v: f"{int(v)} mg" if v == int(v) else f"{v} mg"
+                r[f"{drug} — AM"] = fmt(half)
+                r[f"{drug} — PM"] = fmt(mg - half)
+            except Exception:
+                r[f"{drug} — AM"] = dose_str
+                r[f"{drug} — PM"] = "—"
+
         rows.append(r)
     return pd.DataFrame(rows)
 
