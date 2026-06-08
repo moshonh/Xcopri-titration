@@ -32,6 +32,7 @@ Deps: pip install streamlit pandas reportlab
 """
 
 import io
+import re
 import streamlit as st
 import pandas as pd
 from datetime import date
@@ -684,7 +685,7 @@ SAFETY_FLAGS = [
             "patients (prior drug hypersensitivity, HLA-B*15:02 positive)."
         ),
         "refs": ["Sperling2020", "Steinhoff2024", "Krauss2025", "Krauss2020"],
-        "bg": "#FDECEA", "border": "#C62828",
+        "bg": "var(--panel-red-bg)", "border": "var(--panel-red-border)", "text": "var(--panel-red-text)",
     },
     {
         "emoji": "⚡",
@@ -697,7 +698,7 @@ SAFETY_FLAGS = [
             "QTc <340 ms: withhold dose escalation and seek cardiology review."
         ),
         "refs": ["Roberti2021", "Zaccara2021", "Krauss2025"],
-        "bg": "#FFF3E0", "border": "#E65100",
+        "bg": "var(--panel-orange-bg)", "border": "var(--panel-orange-border)", "text": "var(--panel-orange-text)",
     },
     {
         "emoji": "🔄",
@@ -710,7 +711,7 @@ SAFETY_FLAGS = [
             "control. Always monitor both directions of the interaction."
         ),
         "refs": ["Landmark2026", "Charlier2026", "Operto2025"],
-        "bg": "#E8F5E9", "border": "#2E7D32",
+        "bg": "var(--panel-green-bg)", "border": "var(--panel-green-border)", "text": "var(--panel-green-text)",
     },
     {
         "emoji": "🟡",
@@ -725,7 +726,7 @@ SAFETY_FLAGS = [
             "Exercise caution in patients with pre-existing liver disease."
         ),
         "refs": ["FDA2019", "EMA2021"],
-        "bg": "#FFF8E1", "border": "#F9A825",
+        "bg": "var(--panel-amber-bg)", "border": "var(--panel-amber-border)", "text": "var(--panel-amber-text)",
     },
     {
         "emoji": "👶",
@@ -738,7 +739,7 @@ SAFETY_FLAGS = [
             "remain limited. Use only in specialist centers with multidisciplinary team agreement."
         ),
         "refs": ["Samanta2025"],
-        "bg": "#E3F2FD", "border": "#1565C0",
+        "bg": "var(--panel-blue-bg)", "border": "var(--panel-blue-border)", "text": "var(--panel-blue-text)",
     },
     {
         "emoji": "ℹ️",
@@ -752,7 +753,7 @@ SAFETY_FLAGS = [
             "This tool does not model interactions at doses >200 mg/day."
         ),
         "refs": ["FDA2019", "EMA2021", "Smith2022", "Greene2024"],
-        "bg": "#EDE7F6", "border": "#5E35B1",
+        "bg": "var(--panel-indigo-bg)", "border": "var(--panel-indigo-border)", "text": "var(--panel-indigo-text)",
     },
 ]
 
@@ -885,17 +886,15 @@ def taper_dose_str(drug: str, base_dose: float, period_idx: int) -> str:
 # HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-@st.cache_data(ttl=None)
 def risk_colors(risk: str):
     return {
-        "HIGH":         ("#FDECEA", "#C62828"),
-        "MODERATE":     ("#FFF8E1", "#F57F17"),
-        "LOW-MODERATE": ("#FFF8E1", "#F57F17"),
-        "LOW":          ("#E8F5E9", "#2E7D32"),
-    }.get(risk, ("#F5F5F5", "#9E9E9E"))
+        "HIGH":         ("var(--panel-red-bg)",    "var(--panel-red-border)",    "var(--panel-red-text)"),
+        "MODERATE":     ("var(--panel-amber-bg)",  "var(--panel-amber-border)",  "var(--panel-amber-text)"),
+        "LOW-MODERATE": ("var(--panel-amber-bg)",  "var(--panel-amber-border)",  "var(--panel-amber-text)"),
+        "LOW":          ("var(--panel-green-bg)",  "var(--panel-green-border)",  "var(--panel-green-text)"),
+    }.get(risk, ("var(--panel-gray-bg)", "var(--panel-gray-border)", "var(--panel-gray-text)"))
 
 
-@st.cache_data(ttl=None)
 def risk_label(risk: str) -> str:
     return {
         "HIGH":         "🔴 HIGH RISK",
@@ -929,6 +928,8 @@ def floor_tablet(mg: float, sizes: list, splittable: bool = False) -> str:
     best = max(below)
     if best == int(best):
         return f"{int(best)} mg"
+    if any(abs(best - s) < 1e-9 for s in sizes):
+        return f"{best:g} mg"
     return f"{int(best * 2) // 2}½ mg ({int(best * 2)} mg tablet, split)"
 
 
@@ -947,10 +948,10 @@ def compute_dose(base: float, pct, drug: str = "") -> str:
     # Threshold check: hold dose unchanged
     threshold = DRUG_DB.get(drug, {}).get("dose_adjustment_threshold")
     if threshold and base <= threshold and pct != 0:
-        return f"{int(base)} mg"
+        return f"{base:g} mg"
 
     if pct == 0:
-        return f"{int(base)} mg" if base else "No change"
+        return f"{base:g} mg" if base else "No change"
 
     raw = base * (1 + pct / 100)
 
@@ -1009,13 +1010,17 @@ def build_df(selected_frozen: tuple) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=None, show_spinner=False)
-def build_me_df(selected_frozen: tuple, df_json: str, taper_drug: str = None) -> pd.DataFrame:
+def build_me_df(selected_frozen: tuple, df_json: str, taper_drug: str | None = None) -> pd.DataFrame:
     """
     AM/PM dose breakdown.
     Computes ALL drugs directly from source data to avoid parsing issues with
     tablet-split strings like '27½ mg (55 mg tablet, split) (↓25%)'.
     Only the Week column is taken from df for row ordering.
     """
+
+    def _fmt_dose(v):
+        return f"{int(v)} mg" if v == int(v) else f"{v} mg"
+
     df = pd.read_json(io.StringIO(df_json))
     selected = {drug: {"dose": dose, "serum": serum} for drug, dose, serum in selected_frozen}
     rows = []
@@ -1034,9 +1039,8 @@ def build_me_df(selected_frozen: tuple, df_json: str, taper_drug: str = None) ->
                 try:
                     mg   = float(val.split(" mg")[0].replace("½", ".5").strip())
                     half = mg / 2
-                    fmt  = lambda v: f"{int(v)} mg" if v == int(v) else f"{v} mg"
-                    r[f"{taper_drug} — AM"] = fmt(half)
-                    r[f"{taper_drug} — PM"] = fmt(mg - half)
+                    r[f"{taper_drug} — AM"] = _fmt_dose(half)
+                    r[f"{taper_drug} — PM"] = _fmt_dose(mg - half)
                 except Exception:
                     r[f"{taper_drug} — AM"] = val
                     r[f"{taper_drug} — PM"] = "—"
@@ -1057,7 +1061,8 @@ def build_me_df(selected_frozen: tuple, df_json: str, taper_drug: str = None) ->
             dose_str = compute_dose(base, pct, drug)
 
             if "Switch" in dose_str or "REVIEW" in dose_str or dose_str == "—":
-                r[drug] = dose_str
+                r[f"{drug} — AM"] = dose_str
+                r[f"{drug} — PM"] = "—"
                 continue
 
             # Extract the leading numeric mg value cleanly
@@ -1066,15 +1071,36 @@ def build_me_df(selected_frozen: tuple, df_json: str, taper_drug: str = None) ->
                 numeric_part = dose_str.split(" mg")[0].replace("½", ".5").strip()
                 mg   = float(numeric_part)
                 half = mg / 2
-                fmt  = lambda v: f"{int(v)} mg" if v == int(v) else f"{v} mg"
-                r[f"{drug} — AM"] = fmt(half)
-                r[f"{drug} — PM"] = fmt(mg - half)
+                r[f"{drug} — AM"] = _fmt_dose(half)
+                r[f"{drug} — PM"] = _fmt_dose(mg - half)
             except Exception:
                 r[f"{drug} — AM"] = dose_str
                 r[f"{drug} — PM"] = "—"
 
         rows.append(r)
     return pd.DataFrame(rows)
+
+
+# Maps known non-Latin-1 symbols to readable ASCII equivalents for PDF output.
+_PDF_SUBS: dict[str, str] = {
+    # Risk-level indicators
+    '🔴': '[HIGH]', '🟡': '[MOD]', '🟢': '[LOW]',
+    # Safety-flag emojis
+    '⚠️': '[!]', '⚡': '[!]', '🔄': '[<->]', '👶': '[PEDS]', 'ℹ️': '[i]',
+    # Math / comparison operators
+    '≤': '<=', '≥': '>=',
+    '→': '->', '←': '<-', '↓': '-', '↑': '+', '↔': '<->',
+    # Typography
+    '\u2013': '-', '\u2014': '--', '\u2022': '-',
+}
+
+
+def _pdf_safe(s: str) -> str:
+    """Substitute known symbols with ASCII equivalents, then strip remaining non-Latin-1 chars."""
+    s = str(s)
+    for src, dst in _PDF_SUBS.items():
+        s = s.replace(src, dst)
+    return re.sub(r'[^\x00-\xFF]', '', s).strip()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1127,29 +1153,30 @@ def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str) -> byt
     story.append(Paragraph("Safety Flags", S["h2"]))
     for flag in SAFETY_FLAGS:
         story.append(Paragraph(
-            f"<b>{flag['emoji']} {flag['title']} — {flag['subtitle']}</b>: {flag['body']}",
+            f"<b>{_pdf_safe(flag['emoji'])} {_pdf_safe(flag['title'])} — {_pdf_safe(flag['subtitle'])}</b>: {_pdf_safe(flag['body'])}",
             S["body"]))
     story.append(Spacer(1, 4))
 
     story.append(Paragraph("Drug Interaction Summary", S["h2"]))
     for drug in selected:
         d  = DRUG_DB[drug]
-        rl = risk_label(d["risk"])
-        story.append(Paragraph(f"<b>{rl} — {drug}</b>: {d['recommendation']}", S["body"]))
+        rl = _pdf_safe(risk_label(d["risk"]))
+        rec = _pdf_safe(d['recommendation']).replace("\n", "<br/>")
+        story.append(Paragraph(f"<b>{rl} — {drug}</b>: {rec}", S["body"]))
         if d.get("two_way"):
-            story.append(Paragraph(f"Two-way: {d['two_way']}", S["small"]))
+            story.append(Paragraph(f"Two-way: {_pdf_safe(d['two_way'])}", S["small"]))
         story.append(Paragraph(f"Evidence: {fmt_refs(tuple(d['references']))}", S["small"]))
         story.append(Spacer(1, 3))
 
     story.append(Paragraph("12-Week Titration Schedule", S["h2"]))
-    cols   = list(df.columns)
+    cols   = [_pdf_safe(c) for c in df.columns]
     n      = len(cols)
     pw     = A4[0] - 36*mm
     w0     = 22*mm
     wrest  = (pw - w0) / max(n - 1, 1)
     widths = [w0] + [wrest] * (n - 1)
 
-    tdata  = [cols] + [list(r) for _, r in df.iterrows()]
+    tdata  = [cols] + [[_pdf_safe(v) for v in r] for _, r in df.iterrows()]
     tbl    = Table(tdata, colWidths=widths, repeatRows=1)
     tbl.setStyle(TableStyle([
         ("BACKGROUND",    (0,0), (-1,0), colors.HexColor("#E8EAF6")),
@@ -1194,9 +1221,44 @@ st.set_page_config(
     initial_sidebar_state="collapsed",   # saves render time on first load
 )
 
+# ── Theme-aware colour tokens ─────────────────────────────────────────────────
+st.markdown(
+    """<style>
+:root {
+    --panel-red-bg:#FDECEA;    --panel-red-border:#C62828;    --panel-red-text:#4A0000;
+    --panel-orange-bg:#FFF3E0; --panel-orange-border:#E65100; --panel-orange-text:#3D1A00;
+    --panel-green-bg:#E8F5E9;  --panel-green-border:#2E7D32;  --panel-green-text:#1A3620;
+    --panel-amber-bg:#FFF8E1;  --panel-amber-border:#F57F17;  --panel-amber-text:#3E2800;
+    --panel-blue-bg:#E3F2FD;   --panel-blue-border:#1565C0;   --panel-blue-text:#0D2040;
+    --panel-indigo-bg:#EDE7F6; --panel-indigo-border:#5E35B1; --panel-indigo-text:#1E0B40;
+    --panel-violet-bg:#F3E5F5; --panel-violet-border:#7B1FA2; --panel-violet-text:#2A0D3A;
+    --panel-pink-bg:#FFF8F8;   --panel-pink-border:#E57373;   --panel-pink-text:#3B0000;
+    --panel-gray-bg:#F3F3F3;   --panel-gray-border:#9E9E9E;   --panel-gray-text:#212121;
+    --text-muted:#555; --text-muted2:#666;
+    --text-danger:#B71C1C; --text-info:#1565C0; --text-success:#1B5E20;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --panel-red-bg:#3B1010;    --panel-red-border:#EF5350;    --panel-red-text:#FFCDD2;
+        --panel-orange-bg:#3D2200; --panel-orange-border:#FF8C00; --panel-orange-text:#FFE0B2;
+        --panel-green-bg:#1A3A22;  --panel-green-border:#66BB6A;  --panel-green-text:#C8E6C9;
+        --panel-amber-bg:#3A2D00;  --panel-amber-border:#FFB74D;  --panel-amber-text:#FFF9C4;
+        --panel-blue-bg:#0D2644;   --panel-blue-border:#64B5F6;   --panel-blue-text:#BBDEFB;
+        --panel-indigo-bg:#261645; --panel-indigo-border:#B39DDB; --panel-indigo-text:#EDE7F6;
+        --panel-violet-bg:#2D1B3D; --panel-violet-border:#CE93D8; --panel-violet-text:#F3E5F5;
+        --panel-pink-bg:#2C1010;   --panel-pink-border:#E57373;   --panel-pink-text:#FFCDD2;
+        --panel-gray-bg:#2A2A2A;   --panel-gray-border:#757575;   --panel-gray-text:#E0E0E0;
+        --text-muted:#AAAAAA; --text-muted2:#999999;
+        --text-danger:#EF9A9A; --text-info:#90CAF9; --text-success:#A5D6A7;
+    }
+}
+</style>""",
+    unsafe_allow_html=True,
+)
+
 # ── Privacy banner (on-premise mode) ─────────────────────────────────────────
 st.markdown(
-    "<div style='background:#E8F5E9;border-left:4px solid #2E7D32;"
+    "<div style='background:var(--panel-green-bg);border-left:4px solid var(--panel-green-border);color:var(--panel-green-text);"
     "padding:8px 16px;border-radius:6px;margin-bottom:10px;font-size:13px'>"
     "🔒 <b>On-Premise Mode</b> — All data remains on this computer. "
     "No information is transmitted to any external server.</div>",
@@ -1376,11 +1438,11 @@ with tab3:
     st.subheader("Safety Flags — Read Before Proceeding")
     for flag in SAFETY_FLAGS:
         st.markdown(
-            f"<div style='background:{flag['bg']};border-left:4px solid {flag['border']};"
+            f"<div style='background:{flag['bg']};border-left:4px solid {flag['border']};color:{flag['text']};"
             f"padding:12px 16px;border-radius:6px;margin-bottom:10px'>"
             f"<strong>{flag['emoji']} {flag['title']} — {flag['subtitle']}</strong><br>"
             f"<span style='font-size:13px'>{flag['body']}</span><br>"
-            f"<span style='font-size:11px;color:#555'>Evidence: {fmt_refs(tuple(flag['refs']))}</span>"
+            f"<span style='font-size:11px;color:var(--text-muted)'>Evidence: {fmt_refs(tuple(flag['refs']))}</span>"
             f"</div>",
             unsafe_allow_html=True,
         )
@@ -1393,21 +1455,21 @@ with tab3:
         st.subheader("Drug-Specific Interaction Summary")
         for drug, info in sd.items():
             d      = DRUG_DB[drug]
-            bg, bd = risk_colors(d["risk"])
+            bg, bd, bt = risk_colors(d["risk"])
             sa     = serum_alert(drug, info.get("serum"))
             ds     = f"{info['dose']} {d['unit']}" if info.get("dose") else "dose not entered"
 
             html = (
-                f"<div style='background:{bg};border-left:4px solid {bd};"
+                f"<div style='background:{bg};border-left:4px solid {bd};color:{bt};"
                 f"padding:12px 16px;border-radius:6px;margin-bottom:10px'>"
                 f"<strong>{risk_label(d['risk'])} — {drug}</strong>"
-                f"&nbsp;<span style='font-size:12px;color:#555'>Current dose: {ds}</span><br>"
+                f"&nbsp;<span style='font-size:12px;color:var(--text-muted)'>Current dose: {ds}</span><br>"
                 f"<span style='font-size:13px'>{d['mechanism']}</span><br>"
                 f"<b>Recommendation:</b> <span style='font-size:13px'>{d['recommendation']}</span>"
             )
             if sa:
                 html += (
-                    f"<br><span style='color:#B71C1C;font-weight:500;font-size:12px'>"
+                    f"<br><span style='color:var(--text-danger);font-weight:500;font-size:12px'>"
                     f"SERUM ALERT: {sa}</span>"
                 )
             # Dose threshold note (e.g. Clobazam ≤20 mg/day → no adjustment)
@@ -1416,23 +1478,23 @@ with tab3:
                 actual_dose = float(info["dose"])
                 if actual_dose <= threshold:
                     html += (
-                        f"<br><span style='color:#1565C0;font-weight:500;font-size:12px'>"
+                        f"<br><span style='color:var(--text-info);font-weight:500;font-size:12px'>"
                         f"ℹ️ Current dose ({int(actual_dose)} mg/day) is ≤{threshold} mg/day — "
                         f"dose held unchanged throughout titration. Monitor clinically.</span>"
                     )
                 else:
                     html += (
-                        f"<br><span style='color:#B71C1C;font-weight:500;font-size:12px'>"
+                        f"<br><span style='color:var(--text-danger);font-weight:500;font-size:12px'>"
                         f"⚠️ Current dose ({int(actual_dose)} mg/day) exceeds {threshold} mg/day — "
                         f"dose reduction per schedule is recommended.</span>"
                     )
             if d.get("two_way"):
                 html += (
-                    f"<br><span style='color:#1B5E20;font-size:12px'>"
+                    f"<br><span style='color:var(--text-success);font-size:12px'>"
                     f"Bidirectional PK: {d['two_way']}</span>"
                 )
             html += (
-                f"<br><span style='font-size:11px;color:#555'>"
+                f"<br><span style='font-size:11px;color:var(--text-muted)'>"
                 f"Evidence: {fmt_refs(tuple(d['references']))}</span></div>"
             )
             st.markdown(html, unsafe_allow_html=True)
@@ -1443,7 +1505,7 @@ with tab3:
         if active_scbs:
             st.divider()
             st.markdown(
-                "<div style='background:#FFF3E0;border-left:5px solid #E65100;"
+                "<div style='background:var(--panel-orange-bg);border-left:5px solid var(--panel-orange-border);color:var(--panel-orange-text);"
                 "padding:14px 18px;border-radius:8px;margin-bottom:12px'>"
                 "<strong>⚡ DELPHI PANEL ALERT — Dual Sodium Channel Blocker Combination</strong><br>"
                 "<span style='font-size:13px'>"
@@ -1454,7 +1516,7 @@ with tab3:
                 f"<b>Detected concomitant SCB(s) in this patient:</b> "
                 f"{', '.join(active_scbs)}"
                 "</span><br>"
-                "<span style='font-size:11px;color:#555'>"
+                "<span style='font-size:11px;color:var(--text-muted)'>"
                 "Evidence: Steinhoff BJ et al., Ther Adv Neurol Disord 2024 [Delphi panel]  |  "
                 "Smith MC et al., Neurol Ther 2022 [Expert consensus]"
                 "</span></div>",
@@ -1473,7 +1535,7 @@ with tab3:
             # Show mechanism of each candidate to aid decision
             for scb in active_scbs:
                 st.markdown(
-                    f"<div style='background:#F3F3F3;border-radius:6px;"
+                    f"<div style='background:var(--panel-gray-bg);color:var(--panel-gray-text);border-radius:6px;"
                     f"padding:8px 14px;margin-bottom:6px;font-size:13px'>"
                     f"<b>{scb}</b>: {SCB_DRUGS[scb]}</div>",
                     unsafe_allow_html=True,
@@ -1498,7 +1560,7 @@ with tab3:
                 if cascade:
                     st.divider()
                     st.markdown(
-                        "<div style='background:#FDECEA;border-left:5px solid #C62828;"
+                        "<div style='background:var(--panel-red-bg);border-left:5px solid var(--panel-red-border);color:var(--panel-red-text);"
                         "padding:14px 18px;border-radius:8px;margin-bottom:12px'>"
                         "<strong>🔴 INDUCER WASHOUT — CASCADE DDI ALERT</strong><br>"
                         "<span style='font-size:13px'>"
@@ -1511,10 +1573,10 @@ with tab3:
                     )
                     for cw in cascade:
                         st.markdown(
-                            f"<div style='background:#FFF8F8;border-left:3px solid #E57373;"
+                            f"<div style='background:var(--panel-pink-bg);border-left:3px solid var(--panel-pink-border);color:var(--panel-pink-text);"
                             f"padding:10px 14px;border-radius:5px;margin-bottom:8px'>"
                             f"<strong>{cw['drug']}</strong> — {cw['change']}<br>"
-                            f"<span style='font-size:12px;color:#555'>"
+                            f"<span style='font-size:12px;color:var(--text-muted)'>"
                             f"📋 <b>Recommended action:</b> {cw['action']}</span></div>",
                             unsafe_allow_html=True,
                         )
@@ -1548,12 +1610,12 @@ with tab4:
 
         if taper_drug:
             st.markdown(
-                f"<div style='background:#FFF3E0;border-left:4px solid #E65100;"
+                f"<div style='background:var(--panel-orange-bg);border-left:4px solid var(--panel-orange-border);color:var(--panel-orange-text);"
                 f"padding:10px 16px;border-radius:6px;margin-bottom:12px'>"
                 f"⚡ <b>Delphi panel recommendation applied:</b> "
                 f"<b>{taper_drug}</b> taper schedule is included in the table below "
                 f"(12-week step-wise discontinuation alongside cenobamate titration).<br>"
-                f"<span style='font-size:11px;color:#666'>"
+                f"<span style='font-size:11px;color:var(--text-muted2)'>"
                 f"Basis: Steinhoff BJ et al., Ther Adv Neurol Disord 2024</span></div>",
                 unsafe_allow_html=True,
             )
@@ -1619,7 +1681,7 @@ with tab4:
         if taper_drug:
             st.markdown(
                 f"**{taper_drug} (being discontinued)** — {SCB_DRUGS.get(taper_drug, '')}  \n"
-                f"*Rationale for discontinuation: Delphi panel recommendation against dual SCB '  \n"
+                f"*Rationale for discontinuation: Delphi panel recommendation against dual SCB  \n"
                 f"combination with cenobamate (Steinhoff BJ et al., 2024)*"
             )
         for drug in sd:
@@ -1673,7 +1735,7 @@ with tab4:
 
         st.divider()
         st.markdown(
-            "<div style='background:#F3E5F5;border-left:4px solid #7B1FA2;"
+            "<div style='background:var(--panel-violet-bg);border-left:4px solid var(--panel-violet-border);color:var(--panel-violet-text);"
             "padding:10px 16px;border-radius:6px;margin-bottom:8px'>"
             "<strong>ℹ️ Scope of Recommendations — Important</strong><br>"
             "<span style='font-size:12px'>"
