@@ -23,8 +23,10 @@ Evidence-based on 21 peer-reviewed publications and regulatory documents (2019-2
 [15] Samanta D (2025). Epilepsy Behav. doi:10.1016/j.yebeh.2025.110787
 [16] Abou-Khalil BW (2022). Continuum. doi:10.1212/CON.0000000000001104
 [17] Ciullo I et al. (2026). Epilepsia Open. doi:10.1002/epi4.70261
-[18] US FDA. XCOPRI prescribing information (2019).
+[18] US FDA. XCOPRI prescribing information [updated August 2025 — hepatotoxicity].
 [19] European Medicines Agency. Ontozry SPC (2021).
+[20] Greene SA et al. (2024). PK study of cenobamate enzyme effects up to 200 mg/day. PMID:38573131
+[21] Russo E et al. (2023). Italian consensus document on cenobamate DDI management. PMID:36662573
 
 Run locally:  streamlit run xcopri_app.py
 Run in Docker: see README_SETUP.md
@@ -42,6 +44,13 @@ from reportlab.lib.units import mm
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable,
 )
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# APP VERSION / METADATA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+APP_VERSION      = "1.0"
+APP_LAST_UPDATED = "June 21, 2026"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # REFERENCE REGISTRY
@@ -1175,7 +1184,8 @@ def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str) -> byt
     story.append(Paragraph(
         "DISCLAIMER: This report is for clinical decision support only. "
         "All dosing decisions remain the responsibility of the treating physician. "
-        "Evidence base: 21 peer-reviewed publications and regulatory documents, 2019–2026.",
+        "Evidence base: 21 peer-reviewed publications and regulatory documents, 2019–2026. "
+        f"Tool version {APP_VERSION}, last updated {APP_LAST_UPDATED}.",
         S["small"],
     ))
 
@@ -1194,6 +1204,114 @@ st.set_page_config(
     initial_sidebar_state="collapsed",   # saves render time on first load
 )
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# DISCLAIMER GATE — must be accepted before the tool is accessible
+# ═══════════════════════════════════════════════════════════════════════════════
+
+if "disclaimer_accepted" not in st.session_state:
+    st.session_state["disclaimer_accepted"] = False
+
+if not st.session_state["disclaimer_accepted"]:
+    st.markdown(
+        "<h1 style='text-align:center;margin-bottom:0'>🧠 Xcopri (Cenobamate)</h1>"
+        "<h3 style='text-align:center;color:#555;margin-top:4px'>Clinical Transition &amp; Drug-Interaction Tool</h3>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f"<p style='text-align:center;color:#888;font-size:13px'>"
+        f"Version {APP_VERSION} &nbsp;·&nbsp; Last updated: {APP_LAST_UPDATED}</p>",
+        unsafe_allow_html=True,
+    )
+    st.divider()
+
+    st.markdown(
+        "<div style='background:#FFF8E1;border-left:4px solid #F57F17;"
+        "padding:12px 16px;border-radius:6px;margin-bottom:16px'>"
+        "<b>⚠ This tool is intended for use by qualified healthcare professionals only.</b> "
+        "Please read the disclaimer below in full before proceeding.</div>",
+        unsafe_allow_html=True,
+    )
+
+    st.subheader("Legal Disclaimer")
+
+    st.markdown(
+        """
+This program is designed for medical professionals. The app is based on available
+peer-reviewed clinical evidence (21 publications and regulatory documents, 2019–2026 —
+see the Evidence Base tab) and the expert opinions of the app developers. It is **not an
+official guideline**, and the recommendations do not replace standard health care practice.
+Interpretation of the content and data presented are the responsibility of the user.
+
+This tool is designed to aid the prescriber, but does **not substitute** for that person's
+clinical judgment and for the need to take into consideration additional patient-related
+variables not included in the software algorithm (including, but not limited to, individual
+pharmacokinetic variability, CYP2C19 genotype, concurrent non-antiseizure medications, and
+co-morbidities beyond those captured in the Patient Profile tab).
+
+The final decision regarding prescription, dose adjustment, or discontinuation of any
+medication is the **sole responsibility of the treating physician**, who may choose a
+different course of treatment than that suggested by this tool. The developers do not
+take responsibility for failure of prescribed medication to control seizures, for any
+adverse drug reactions, drug-drug interactions not captured by the tool, or any other
+adverse effects that patients may experience.
+
+Users should be aware that cenobamate and other antiseizure medications may fail to
+control seizures and may produce adverse effects, some of which may be serious or
+life-threatening (including DRESS syndrome, QT shortening, and hepatotoxicity — see
+Safety Flags). Users should have detailed knowledge of any drug they prescribe and be
+familiar with its efficacy and adverse-effect profile, including the current approved
+prescribing information.
+
+All dose-adjustment recommendations in this tool apply to patients with **normal hepatic
+and renal function**, no significant co-morbidities beyond epilepsy, and to cenobamate
+doses **up to 200 mg/day**; the pharmacokinetic data underlying these recommendations were
+established at doses up to 200 mg/day, and further adjustments may be required at higher
+doses. The tool does not cover interactions with non-antiseizure medications; consultation
+with a clinical pharmacologist or clinical pharmacist is recommended for patients on
+complex non-ASM polypharmacy.
+
+**This is not a medical device.** The user understands that they must independently
+review the basis for the recommendations presented by this tool (each recommendation is
+accompanied by its mechanistic rationale and source citation), and must not rely
+primarily on these recommendations but rather on their own clinical judgment when making
+decisions for individual patients.
+
+**On-premise / local use:** This tool runs entirely on the user's own computer or
+institutional infrastructure. No patient data entered into the tool is transmitted to
+the developers or to any external server, and no data is saved by the application beyond
+the current session.
+
+The user is liable and responsible for any advice, course of treatment, diagnosis, or
+other information obtained through use of this tool. By proceeding, the user releases
+and discharges the developers of this tool and their affiliated institutions from any and
+all claims, liabilities, obligations, disputes, demands, damages, or causes of action of
+any nature, known or unknown, arising from or related to the use of this application.
+        """
+    )
+
+    st.divider()
+
+    col_a, col_b = st.columns([3, 1])
+    with col_a:
+        agree = st.checkbox(
+            "I am a qualified healthcare professional and I have read, understood, "
+            "and agree to the terms of this disclaimer.",
+            key="disclaimer_checkbox",
+        )
+    with col_b:
+        proceed = st.button("Enter Tool →", type="primary", disabled=not agree, use_container_width=True)
+
+    if proceed and agree:
+        st.session_state["disclaimer_accepted"] = True
+        st.rerun()
+
+    st.caption(
+        f"Xcopri Transition Tool · Version {APP_VERSION} · Last updated {APP_LAST_UPDATED} · "
+        "On-premise, evidence-based clinical decision support."
+    )
+
+    st.stop()  # halt execution here — nothing below renders until accepted
+
 # ── Privacy banner (on-premise mode) ─────────────────────────────────────────
 st.markdown(
     "<div style='background:#E8F5E9;border-left:4px solid #2E7D32;"
@@ -1206,7 +1324,8 @@ st.markdown(
 st.title("🧠 Xcopri (Cenobamate) — Clinical Transition Tool")
 st.caption(
     "Evidence-based drug interaction management for neurologists  ·  "
-    "Grounded in **21 peer-reviewed publications and regulatory documents (2019–2026)**"
+    "Grounded in **21 peer-reviewed publications and regulatory documents (2019–2026)**  ·  "
+    f"Version {APP_VERSION} · Last updated {APP_LAST_UPDATED}"
 )
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -1712,3 +1831,12 @@ with tab5:
             if pmid:
                 st.write(f"**{pmid}**")
             st.info(f"**Relevance to this tool:** {relevance}")
+
+    st.divider()
+    st.markdown(
+        f"<div style='text-align:center;color:#888;font-size:12px;padding:10px'>"
+        f"Xcopri Transition Tool &nbsp;·&nbsp; Version {APP_VERSION} &nbsp;·&nbsp; "
+        f"Last updated {APP_LAST_UPDATED} &nbsp;·&nbsp; "
+        f"Clinical decision support only — see disclaimer accepted at entry.</div>",
+        unsafe_allow_html=True,
+    )
