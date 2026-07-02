@@ -170,7 +170,7 @@ PAPER_LIST = [
 # ═══════════════════════════════════════════════════════════════════════════════
 # DRUG DATABASE
 # pct_per_period: 6 values (weeks 1-2 … 11-12). Negative = reduce %; positive = increase %.
-# None = non-numeric interaction (e.g. contraceptives).
+# None = not applicable for this period (drug excluded from titration logic).
 # ═══════════════════════════════════════════════════════════════════════════════
 
 DRUG_DB = {
@@ -522,7 +522,7 @@ DRUG_DB = {
         "tablet_sizes": [], "splittable": False,
         "risk": "HIGH",
         "action": "Switch to non-hormonal contraception BEFORE starting cenobamate",
-        "conditional_on_pregnancy": True,   # only shown if hormonal contraception selected in Tab 1
+        "conditional_on_pregnancy": True,   # Tab 1 warning only — excluded from Tab 2 and titration tables
         "mechanism": (
             "CYP3A4 induction markedly reduces estrogen and progestogen plasma levels. "
             "Applies to combined oral pills, progestogen-only pills, patches, vaginal rings, "
@@ -949,8 +949,10 @@ def compute_dose(base: float, pct, drug: str = "") -> str:
     - Sanity check: if adjusted dose >4× baseline → warning flag
     - Max-dose warning per drug
     """
+    # pct_per_period = [None]*6 for Hormonal Contraceptives — this drug is
+    # excluded from Tab 2 and the titration table; branch kept for safety only.
     if pct is None:
-        return "Switch contraception"
+        return "—"
     pct = float(pct)
 
     # Threshold check: hold dose unchanged
@@ -1402,8 +1404,7 @@ with tab1:
     if "hormonal contraception" in preg:
         alerts.append(("error",
             "**Hormonal contraception:** CYP3A4 induction will reduce contraceptive efficacy significantly. "
-            "Switch to copper IUD or condoms BEFORE the first cenobamate dose (Schoretsanitis 2022). "
-            "The Hormonal Contraceptives section will appear automatically in Tab 2."))
+            "Switch to copper IUD or condoms BEFORE the first cenobamate dose (Schoretsanitis 2022)."))
     if "Severe" in liver:
         alerts.append(("error",
             "**Severe hepatic impairment (Child-Pugh C):** Cenobamate is not recommended. "
@@ -1449,12 +1450,11 @@ with tab2:
     )
 
     selected: dict = {}
-    preg_status = st.session_state.get("pregnancy", "")
-    show_contraceptives = "hormonal contraception" in preg_status.lower()
 
     for drug, ddata in DRUG_DB.items():
-        # Hormonal contraceptives: only shown if selected in Tab 1
-        if ddata.get("conditional_on_pregnancy") and not show_contraceptives:
+        # Hormonal Contraceptives: warning is handled exclusively in Tab 1.
+        # Do not display in Tab 2 to avoid user confusion.
+        if ddata.get("conditional_on_pregnancy"):
             continue
 
         rl = risk_label(ddata["risk"])
