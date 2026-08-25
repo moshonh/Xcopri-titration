@@ -1506,7 +1506,7 @@ with tab1:
             "older adults required 36.3% drug load reduction vs 31.8% overall (O'Dwyer 2024).\n"
             "• **Clobazam:** Lower threshold for proactive taper — even 10-15 mg/day frequently "
             "causes somnolence when cenobamate is added in older adults.\n"
-            "• **SCB taper:** Consider Conservative/Sperling pathway (defer SCB taper until "
+            "• **SCB taper:** Consider Conservative pathway (defer SCB taper until "
             "cenobamate reaches 100 mg/day) to minimise early seizure risk.\n"
             "• **Monitoring:** Falls risk, cognitive function, gait, sedation at every visit.\n"
             "• **ECG:** Obtain baseline if cardiac history or lacosamide co-prescribed; "
@@ -1711,25 +1711,25 @@ with tab3:
                 "Select taper strategy:",
                 options=[
                     "Delphi Consensus — Standard early taper (begin from week 1)",
-                    "Conservative / Sperling — Defer SCB taper until cenobamate reaches 100 mg/day",
+                    "Conservative — Defer SCB taper until cenobamate reaches 100 mg/day",
                     "Reactive — Defer SCB reduction until symptoms emerge (dizziness, ataxia, diplopia)",
                 ],
                 key="scb_pathway",
                 help=(
                     "Delphi: Steinhoff 2024 — proactive SCB reduction from cenobamate initiation.\n"
-                    "Conservative/Sperling: Hold SCB at baseline until cenobamate reaches 100 mg/day "
+                    "Conservative pathway: Hold SCB at baseline until cenobamate reaches 100 mg/day "
                     "to avoid early seizure worsening during low-dose cenobamate titration. "
                     "Preferred in patients with high seizure burden or high risk from breakthrough seizures.\n"
                     "Reactive: Monitor and reduce only if CNS adverse effects (dizziness, ataxia, "
                     "diplopia, sedation) emerge during titration."
                 ),
             )
-            if "Sperling" in scb_pathway:
+            if "Conservative" in scb_pathway:
                 st.info(
                     "**Conservative pathway selected:** The SCB taper will begin only after cenobamate "
                     "reaches 100 mg/day (weeks 7-8). This reduces the risk of seizure worsening during "
                     "low-dose cenobamate initiation. The titration table will reflect this delayed start. "
-                    "Evidence basis: Prof. Michael Sperling expert recommendation; Delphi panel (Steinhoff 2024)."
+                    "Evidence basis: Expert opinion; Delphi panel (Steinhoff 2024; Smith 2022)."
                 )
             elif "Reactive" in scb_pathway:
                 st.info(
@@ -1741,7 +1741,6 @@ with tab3:
                     "**Delphi consensus pathway selected:** Standard proactive taper beginning "
                     "from cenobamate initiation (Steinhoff 2024; Smith 2022)."
                 )
-            st.session_state["scb_pathway"] = scb_pathway
 
             if chosen and chosen not in ("— Physician decision pending —", "None — maintain all SCBs (document rationale)"):
                 base = sd[chosen].get("dose", 0)
@@ -1806,8 +1805,8 @@ with tab4:
 
         if taper_drug:
             pathway = st.session_state.get("scb_pathway", "")
-            if "Sperling" in pathway:
-                pathway_label = "Conservative / Sperling pathway — taper begins at cenobamate 100 mg/day (weeks 7–8)"
+            if "Conservative" in pathway:
+                pathway_label = "Conservative pathway — taper begins at cenobamate 100 mg/day (weeks 7–8)"
                 pathway_color = "#E8F5E9"
                 pathway_border = "#2E7D32"
             elif "Reactive" in pathway:
