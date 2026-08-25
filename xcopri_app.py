@@ -178,11 +178,9 @@ PAPER_LIST = [
     ("Yoon YJ, Sarkis R, Lee JW", "2026",
      "Cenobamate in older adults with drug-resistant epilepsy: real-world tolerability, efficacy, and predictors of discontinuation",
      "Seizure: Eur J Epilepsy", "10.1016/j.seizure.2026.07.012", "PMID:42468323",
-     "Real-world data in older adults (n = cohort): tolerability is the main predictor of "
-     "discontinuation. Age ≥70, high Charlson Comorbidity Index, and concomitant CNS-active "
-     "non-ASM medications are independent predictors of adverse-effect-related stopping. "
-     "Supports 'Start Low Go Slow' pathway and flexible lower target doses. "
-     "Vol 141:109-115."),
+     "Real-world data in older adults: tolerability is the main predictor of "
+     "cenobamate discontinuation. Patients aged 70+ achieve lower peak doses and discontinue earlier. "
+     "Supports 'Start Low Go Slow' pathway and flexible lower target doses. Vol 141:109-115."),
 ]
 
 
@@ -1406,19 +1404,6 @@ with tab1:
     with c3:
         st.number_input("eGFR (ml/min)", 0, 150, value=None, placeholder="Normal >60", key="egfr")
 
-    st.selectbox("Charlson Comorbidity Index (CCI)",
-        ["Not assessed", "Low (0-1)", "Moderate (2-3)", "High (≥4)"],
-        key="cci",
-        help="Higher CCI is an independent predictor of cenobamate discontinuation in older adults (Yoon 2026).",
-    )
-    st.multiselect(
-        "Concomitant CNS-active non-ASM medications",
-        ["None", "Opioids", "Benzodiazepines (non-AED)", "Antidepressants (TCA/SSRI/SNRI)",
-         "Antipsychotics", "Sedating antihistamines", "Muscle relaxants", "Sleep medications", "Other CNS drugs"],
-        default=["None"],
-        key="cnsdrugs",
-        help="Concomitant CNS-active non-ASM medications are independent predictors of tolerability-related discontinuation (Yoon 2026).",
-    )
     st.selectbox(
         "Hepatic function",
             ["Normal (Child-Pugh A)", "Mild impairment (Child-Pugh B)",
@@ -1484,43 +1469,37 @@ with tab1:
             "juvenile myoclonic epilepsy) may be worsened by sodium channel blockers."))
 
     age_val = st.session_state.get("age") or 0
-    cci_val = st.session_state.get("cci", "Not assessed")
-    cnsdrugs_val = st.session_state.get("cnsdrugs", ["None"])
-    high_cci = cci_val in ("Moderate (2-3)", "High (≥4)")
-    has_cns_drugs = cnsdrugs_val and "None" not in cnsdrugs_val
-    high_risk_elderly = (age_val and age_val >= 70) or (age_val and age_val >= 65 and (high_cci or has_cns_drugs))
 
-    if high_risk_elderly or (age_val and age_val >= 70):
-        cns_list = ", ".join(d for d in cnsdrugs_val if d != "None") if has_cns_drugs else "none reported"
+    if age_val and age_val >= 70:
         alerts.append(("error",
-            f"**⚠️ HIGH-RISK OLDER PATIENT — 'Start Low, Go Slow' pathway strongly recommended**\n\n"
-            f"Age: {age_val} years | CCI: {cci_val} | Concomitant CNS drugs: {cns_list}\n\n"
-            "Real-world data (Yoon et al., Seizure 2026;141:109-115. PMID:42468323) identify "
-            "age ≥70, high CCI, and concomitant CNS-active non-ASM medications as independent "
-            "predictors of tolerability-related cenobamate discontinuation.\n\n"
-            "**Recommended 'Start Low, Go Slow' adjustments:**\n"
-            "• **Titration interval:** Extend each dose step to 4-8 weeks (not 2 weeks).\n"
-            "• **Target dose:** Flexible and tolerability-guided — therapeutic benefit often achieved "
-            "at 100-150 mg/day; avoid pushing to 200 mg/day if side effects limit escalation.\n"
-            "• **ASM reductions:** Apply more aggressive concomitant ASM dose reductions — "
-            "older adults required 36.3% drug load reduction vs 31.8% overall (O'Dwyer 2024).\n"
-            "• **Clobazam:** Lower threshold for proactive taper — even 10-15 mg/day frequently "
-            "causes somnolence when cenobamate is added in older adults.\n"
-            "• **SCB taper:** Consider Conservative pathway (defer SCB taper until "
-            "cenobamate reaches 100 mg/day) to minimise early seizure risk.\n"
-            "• **Monitoring:** Falls risk, cognitive function, gait, sedation at every visit.\n"
+            "**⚠️ Older patient (age ≥70) — 'Start Low, Go Slow' pathway strongly recommended**\n\n"
+            "Real-world data (Yoon et al., Seizure 2026;141:109-115. PMID:42468323) show that "
+            "patients aged 70+ have significantly earlier cenobamate discontinuation due to adverse "
+            "effects and achieve lower peak doses than younger adults.\n\n"
+            "**Recommended adjustments:**\n"
+            "• **Titration interval:** Extend each dose step to 4–8 weeks (not 2 weeks), guided by individual tolerability.\n"
+            "• **Target dose:** Flexible and tolerability-guided — benefit often achieved at 100–150 mg/day; "
+            "avoid pushing to 200 mg/day if side effects limit escalation.\n"
+            "• **Concomitant ASM reductions:** More aggressive reductions required — older adults "
+            "needed 36.3% drug load reduction vs 31.8% overall (O'Dwyer, Drugs Aging 2024. PMID:38446341).\n"
+            "• **Clobazam:** Even 10–15 mg/day frequently causes somnolence when cenobamate is added — "
+            "consider proactive gradual taper regardless of absolute dose.\n"
+            "• **SCB taper:** Consider Conservative pathway (defer SCB taper until cenobamate "
+            "reaches 100 mg/day) to minimise early seizure risk.\n"
+            "• **Monitoring:** Falls risk, cognitive function, gait, and sedation at every visit.\n"
             "• **ECG:** Obtain baseline if cardiac history or lacosamide co-prescribed; "
             "routine periodic ECGs NOT required."))
     elif age_val and age_val >= 65:
         alerts.append(("warning",
-            "**Older patient (age 65-69) — enhanced monitoring recommended:**\n\n"
-            "Higher rates of adverse effects (dizziness, somnolence, fatigue, falls) "
-            "in patients aged 65-70 vs overall population (O'Dwyer et al., Drugs Aging 2024. PMID:38446341).\n\n"
+            "**Older patient (age 65–69) — enhanced monitoring recommended**\n\n"
+            "Higher rates of adverse effects (dizziness, somnolence, fatigue, falls) in patients "
+            "aged 65–70 vs the overall trial population "
+            "(O'Dwyer et al., Drugs Aging 2024. PMID:38446341).\n\n"
             "**Recommended adjustments:**\n"
-            "• Consider extending titration steps to 3-4 weeks if tolerability is a concern.\n"
-            "• Target a lower maximum dose (100-150 mg/day) if adequate seizure control is achieved.\n"
+            "• Consider extending titration steps to 3–4 weeks if tolerability is a concern.\n"
+            "• Target a lower maximum dose (100–150 mg/day) if adequate seizure control is achieved.\n"
             "• Greater reductions in concomitant ASM drug load may be needed.\n"
-            "• If high CCI or concomitant CNS drugs present — apply the 'Start Low Go Slow' pathway above."))
+            "• Monitor closely for falls, cognitive effects, and gait disturbance at each step."))
 
     if alerts:
         st.divider()
