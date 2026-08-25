@@ -4,7 +4,7 @@ Xcopri (Cenobamate) Clinical Transition & Interaction Tool
 ON-PREMISE VERSION — No data leaves this machine.
 All computation is local. No internet connection required after installation.
 
-Evidence-based on 21 peer-reviewed publications and regulatory documents (2019-2026):
+Evidence-based on 23 peer-reviewed publications and regulatory documents (2019-2026):
 
 [1]  Sperling MR et al. (2020). Epilepsia. doi:10.1111/epi.16525
 [2]  Krauss GL et al. (2020). Lancet Neurol. doi:10.1016/S1474-4422(19)30399-0
@@ -27,6 +27,8 @@ Evidence-based on 21 peer-reviewed publications and regulatory documents (2019-2
 [19] European Medicines Agency. Ontozry SPC (2021).
 [20] Greene SA et al. (2022). Clin Transl Sci. 2022;15:899-911. PMID:38573131
 [21] Villani F et al. (2022). Expert Rev Neurother. 2022;22:935-940
+[22] O'Dwyer R et al. (2024). Drugs Aging. 2024;41(3):251-260. PMID:38446341
+[23] Yoon YJ et al. (2026). Seizure. 2026. doi:10.1016/j.seizure.2026.07.012. PMID:42468323
 
 Run locally:  streamlit run xcopri_app.py
 Run in Docker: see README_SETUP.md
@@ -78,6 +80,8 @@ REFERENCES = {
     "EMA2021":              "European Medicines Agency. Ontozry summary of product characteristics. EMA; 2021",
     "Greene2022":           "Greene SA et al. Clin Transl Sci. 2022;15:899-911. PMID:38573131",
     "Villani2022":          "Villani F et al. Expert Rev Neurother. 2022;22:935-940",
+    "ODwyer2024":           "O'Dwyer R et al. Drugs Aging. 2024;41(3):251-260. PMID:38446341",
+    "Yoon2026":             "Yoon YJ, Sarkis R, Lee JW. Seizure Eur J Epilepsy. 2026;141:109-115. doi:10.1016/j.seizure.2026.07.012. PMID:42468323",
 }
 
 PAPER_LIST = [
@@ -165,6 +169,20 @@ PAPER_LIST = [
      "Use of cenobamate for the treatment of focal epilepsy: an Italian expert opinion paper",
      "Expert Rev Neurother", "10.1080/14737175.2022.2136505", "",
      "Italian expert consensus on cenobamate DDI management in clinical practice. Vol 22:935-940."),
+    ("O'Dwyer R et al.", "2024",
+     "Safety and efficacy of cenobamate for focal seizures in older patients: post hoc analysis of a Phase III study",
+     "Drugs Aging", "10.1007/s40266-024-01102-3", "PMID:38446341",
+     "Older patients (age 65-70): higher rates of TEAEs vs overall population; "
+     "greater reduction in concomitant ASM drug load required. "
+     "Basis for elderly-specific warning and enhanced monitoring recommendation."),
+    ("Yoon YJ, Sarkis R, Lee JW", "2026",
+     "Cenobamate in older adults with drug-resistant epilepsy: real-world tolerability, efficacy, and predictors of discontinuation",
+     "Seizure: Eur J Epilepsy", "10.1016/j.seizure.2026.07.012", "PMID:42468323",
+     "Real-world data in older adults (n = cohort): tolerability is the main predictor of "
+     "discontinuation. Age ≥70, high Charlson Comorbidity Index, and concomitant CNS-active "
+     "non-ASM medications are independent predictors of adverse-effect-related stopping. "
+     "Supports 'Start Low Go Slow' pathway and flexible lower target doses. "
+     "Vol 141:109-115."),
 ]
 
 
@@ -180,23 +198,32 @@ DRUG_DB = {
         "tablet_sizes": [5, 10, 20],
         "splittable": True,
         "risk": "HIGH",
-        "action": "Mandatory dose REDUCTION 25–50%",
+        "action": "Dose REDUCTION or close monitoring — strategy depends on dose and patient profile",
         "mechanism": (
             "Cenobamate inhibits CYP2C19, markedly elevating the active metabolite "
             "N-desmethylclobazam (N-CLB) up to 3-fold. Risk of sedation, ataxia, "
-            "respiratory depression. Pharmacodynamic synergy demonstrated beyond PK "
-            "interaction alone. Real-world data support low-dose clobazam (5–10 mg/day) "
-            "as add-on in incomplete responders."
+            "respiratory depression. Pharmacodynamic synergy beyond PK interaction alone. "
+            "⚠️ Patients on 10-15 mg/day frequently experience clinically significant "
+            "somnolence when cenobamate is added — do not rely solely on the 20 mg "
+            "threshold to decide whether intervention is needed. "
+            "Real-world data support low-dose clobazam (5-10 mg/day) as effective "
+            "add-on in incomplete cenobamate responders (Ciullo 2026)."
         ),
         "recommendation": (
-            "Dose adjustment is recommended ONLY if the current daily dose exceeds 20 mg.\n"
-            "• If dose >20 mg/day: reduce clobazam by 25% at weeks 5–6, "
-            "and by a further 25% at weeks 9–10 (total ~50% reduction).\n"
-            "• If dose ≤20 mg/day: no proactive reduction required — monitor clinically "
-            "for signs of N-CLB accumulation (sedation, ataxia) from week 3.\n"
-            "• TDM: consider measuring N-CLB levels if sedation develops.\n"
-            "• If incomplete response to cenobamate persists, consider adjunctive "
-            "low-dose clobazam 5–10 mg/day (Ciullo 2026)."
+            "Select strategy based on patient dose, age, and sensitivity:\n\n"
+            "STRATEGY 1 — PROACTIVE GRADUAL TAPER (recommended for dose >15 mg/day "
+            "or elderly/sensitive patients):\n"
+            "• Reduce by 2.5-5 mg steps starting week 3 alongside cenobamate titration.\n"
+            "• Target ~25% reduction at weeks 3-4, further 25% at weeks 7-8 if tolerated.\n\n"
+            "STRATEGY 2 — REACTIVE TAPER (dose 10-15 mg/day, younger/robust patients):\n"
+            "• Maintain baseline dose and monitor closely at each visit.\n"
+            "• Reduce immediately if sedation, fatigue, or somnolence emerge.\n"
+            "• TDM (N-CLB levels) strongly recommended from week 3.\n\n"
+            "STRATEGY 3 — HOLD AND MONITOR (dose ≤10 mg/day, clinically stable):\n"
+            "• Hold unchanged; enhanced monitoring for CNS adverse effects.\n"
+            "• Reduce immediately if any sedation signs appear.\n\n"
+            "Note: The 20 mg threshold is a pharmacokinetic guideline, not a safety ceiling. "
+            "Individual sensitivity varies widely — titrate by clinical response."
         ),
         "dose_adjustment_threshold": 20,
         "max_dose_warning": 40,
@@ -378,21 +405,24 @@ DRUG_DB = {
         "tablet_sizes": [50, 100, 150, 200],
         "splittable": False,
         "risk": "MODERATE",
-        "action": "ECG monitoring required — dual sodium channel and cardiac effects",
+        "action": "Cardiac monitoring if clinically indicated — dual sodium channel effects",
         "mechanism": (
             "Both drugs act on voltage-gated sodium channels (different binding sites/modes). "
-            "Cenobamate shortens QT interval; lacosamide prolongs the PR interval. "
-            "Additive cardiac conduction effects are possible. No significant PK interaction."
+            "Cenobamate shortens the QT interval; lacosamide prolongs the PR interval. "
+            "Opposing conduction effects — a baseline ECG before cenobamate initiation is reasonable "
+            "when lacosamide is co-prescribed. Routine periodic ECGs are NOT required unless "
+            "clinically indicated. No significant PK interaction."
         ),
         "recommendation": (
-            "Baseline ECG before cenobamate initiation. Repeat at week 4 and after each "
-            "dose step. No dose adjustment required based on PK. "
-            "Avoid if baseline PR >200 ms without cardiology consultation. "
-            "Monitor for dizziness, diplopia, and ataxia (additive CNS effects)."
+            "• A baseline ECG is reasonable before cenobamate initiation given opposing conduction effects.\n"
+            "• Routine repeat ECGs are NOT required unless clinically indicated.\n"
+            "• Avoid if baseline PR >200 ms without cardiology consultation.\n"
+            "• Monitor for dizziness, diplopia, and ataxia (additive CNS effects).\n"
+            "• No dose adjustment required based on pharmacokinetics."
         ),
         "pct_per_period": [0, 0, 0, 0, 0, 0],
         "serum_toxic_high": None,
-        "references": ["Roberti2021", "Smith2022", "Steinhoff2024"],
+        "references": ["Roberti2021", "Smith2022", "Steinhoff2024", "Zaccara2021"],
         "two_way": None,
     },
 
@@ -699,12 +729,17 @@ SAFETY_FLAGS = [
     {
         "emoji": "⚡",
         "title": "QT Interval Shortening",
-        "subtitle": "Dose-dependent effect — baseline ECG required",
+        "subtitle": "Targeted monitoring — NOT routine periodic ECG for all",
         "body": (
-            "Cenobamate causes dose-dependent QT shortening. Baseline ECG must be obtained "
-            "before initiation and repeated at weeks 4, 8, and 12, and after each dose increase. "
-            "Avoid co-administration with Class Ia/III antiarrhythmics or other QT-shortening agents. "
-            "QTc <340 ms: withhold dose escalation and seek cardiology review."
+            "Cenobamate causes dose-dependent QT shortening. "
+            "Routine, periodic ECG monitoring is NOT required for all patients. "
+            "ECG is recommended only when there is: (1) clinical suspicion of short QT syndrome; "
+            "(2) relevant personal or family cardiac history; (3) symptoms suggestive of QT shortening "
+            "(palpitations, syncope, pre-syncope); or (4) co-administration of other QT-shortening agents "
+            "or Class Ia/III antiarrhythmics. "
+            "If ECG is obtained: QTc <340 ms — withhold dose escalation and seek cardiology review. "
+            "When lacosamide is co-prescribed (PR prolongation risk), a baseline ECG before "
+            "cenobamate initiation is reasonable given the opposing conduction effects."
         ),
         "refs": ["Roberti2021", "Zaccara2021", "Krauss2025"],
         "bg": "#FFF3E0", "border": "#E65100",
@@ -1178,7 +1213,7 @@ def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str) -> byt
     story.append(tbl)
     story.append(Spacer(1, 8))
 
-    story.append(Paragraph("Evidence Base (21 Publications and Regulatory Documents, 2019-2026)", S["h2"]))
+    story.append(Paragraph("Evidence Base (23 Publications and Regulatory Documents, 2019-2026)", S["h2"]))
     for authors, year, title, journal, doi, pmid, _ in PAPER_LIST:
         story.append(Paragraph(f"{authors} ({year}). {title}. {journal}. doi:{doi}", S["small"]))
 
@@ -1187,7 +1222,7 @@ def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str) -> byt
     story.append(Paragraph(
         "DISCLAIMER: This report is for clinical decision support only. "
         "All dosing decisions remain the responsibility of the treating physician. "
-        "Evidence base: 21 peer-reviewed publications and regulatory documents, 2019–2026. "
+        "Evidence base: 23 peer-reviewed publications and regulatory documents, 2019–2026. "
         f"Tool version {APP_VERSION}, last updated {APP_LAST_UPDATED}.",
         S["small"],
     ))
@@ -1240,7 +1275,7 @@ if not st.session_state["disclaimer_accepted"]:
     st.markdown(
         """
 This program is designed for medical professionals. The app is based on available
-peer-reviewed clinical evidence (21 publications and regulatory documents, 2019–2026 —
+peer-reviewed clinical evidence (23 publications and regulatory documents, 2019–2026 —
 see the Evidence Base tab) and the expert opinions of the app developers. It is **not an
 official guideline**, and the recommendations do not replace standard health care practice.
 Interpretation of the content and data presented are the responsibility of the user.
@@ -1338,7 +1373,7 @@ st.markdown(
 st.title("🧠 Xcopri (Cenobamate) — Clinical Transition Tool")
 st.caption(
     "Evidence-based drug interaction management for neurologists  ·  "
-    "Grounded in **21 peer-reviewed publications and regulatory documents (2019–2026)**  ·  "
+    "Grounded in **23 peer-reviewed publications and regulatory documents (2019–2026)**  ·  "
     f"Version {APP_VERSION} · Last updated {APP_LAST_UPDATED}"
 )
 
@@ -1370,8 +1405,22 @@ with tab1:
         )
     with c3:
         st.number_input("eGFR (ml/min)", 0, 150, value=None, placeholder="Normal >60", key="egfr")
-        st.selectbox(
-            "Hepatic function",
+
+    st.selectbox("Charlson Comorbidity Index (CCI)",
+        ["Not assessed", "Low (0-1)", "Moderate (2-3)", "High (≥4)"],
+        key="cci",
+        help="Higher CCI is an independent predictor of cenobamate discontinuation in older adults (Yoon 2026).",
+    )
+    st.multiselect(
+        "Concomitant CNS-active non-ASM medications",
+        ["None", "Opioids", "Benzodiazepines (non-AED)", "Antidepressants (TCA/SSRI/SNRI)",
+         "Antipsychotics", "Sedating antihistamines", "Muscle relaxants", "Sleep medications", "Other CNS drugs"],
+        default=["None"],
+        key="cnsdrugs",
+        help="Concomitant CNS-active non-ASM medications are independent predictors of tolerability-related discontinuation (Yoon 2026).",
+    )
+    st.selectbox(
+        "Hepatic function",
             ["Normal (Child-Pugh A)", "Mild impairment (Child-Pugh B)",
              "Severe impairment (Child-Pugh C)"],
             key="liver",
@@ -1433,6 +1482,45 @@ with tab1:
             "Evidence for primary generalized epilepsies is limited — use off-label with caution "
             "and document clinical rationale. Note that some generalized epilepsy syndromes (e.g. "
             "juvenile myoclonic epilepsy) may be worsened by sodium channel blockers."))
+
+    age_val = st.session_state.get("age") or 0
+    cci_val = st.session_state.get("cci", "Not assessed")
+    cnsdrugs_val = st.session_state.get("cnsdrugs", ["None"])
+    high_cci = cci_val in ("Moderate (2-3)", "High (≥4)")
+    has_cns_drugs = cnsdrugs_val and "None" not in cnsdrugs_val
+    high_risk_elderly = (age_val and age_val >= 70) or (age_val and age_val >= 65 and (high_cci or has_cns_drugs))
+
+    if high_risk_elderly or (age_val and age_val >= 70):
+        cns_list = ", ".join(d for d in cnsdrugs_val if d != "None") if has_cns_drugs else "none reported"
+        alerts.append(("error",
+            f"**⚠️ HIGH-RISK OLDER PATIENT — 'Start Low, Go Slow' pathway strongly recommended**\n\n"
+            f"Age: {age_val} years | CCI: {cci_val} | Concomitant CNS drugs: {cns_list}\n\n"
+            "Real-world data (Yoon et al., Seizure 2026;141:109-115. PMID:42468323) identify "
+            "age ≥70, high CCI, and concomitant CNS-active non-ASM medications as independent "
+            "predictors of tolerability-related cenobamate discontinuation.\n\n"
+            "**Recommended 'Start Low, Go Slow' adjustments:**\n"
+            "• **Titration interval:** Extend each dose step to 4-8 weeks (not 2 weeks).\n"
+            "• **Target dose:** Flexible and tolerability-guided — therapeutic benefit often achieved "
+            "at 100-150 mg/day; avoid pushing to 200 mg/day if side effects limit escalation.\n"
+            "• **ASM reductions:** Apply more aggressive concomitant ASM dose reductions — "
+            "older adults required 36.3% drug load reduction vs 31.8% overall (O'Dwyer 2024).\n"
+            "• **Clobazam:** Lower threshold for proactive taper — even 10-15 mg/day frequently "
+            "causes somnolence when cenobamate is added in older adults.\n"
+            "• **SCB taper:** Consider Conservative/Sperling pathway (defer SCB taper until "
+            "cenobamate reaches 100 mg/day) to minimise early seizure risk.\n"
+            "• **Monitoring:** Falls risk, cognitive function, gait, sedation at every visit.\n"
+            "• **ECG:** Obtain baseline if cardiac history or lacosamide co-prescribed; "
+            "routine periodic ECGs NOT required."))
+    elif age_val and age_val >= 65:
+        alerts.append(("warning",
+            "**Older patient (age 65-69) — enhanced monitoring recommended:**\n\n"
+            "Higher rates of adverse effects (dizziness, somnolence, fatigue, falls) "
+            "in patients aged 65-70 vs overall population (O'Dwyer et al., Drugs Aging 2024. PMID:38446341).\n\n"
+            "**Recommended adjustments:**\n"
+            "• Consider extending titration steps to 3-4 weeks if tolerability is a concern.\n"
+            "• Target a lower maximum dose (100-150 mg/day) if adequate seizure control is achieved.\n"
+            "• Greater reductions in concomitant ASM drug load may be needed.\n"
+            "• If high CCI or concomitant CNS drugs present — apply the 'Start Low Go Slow' pathway above."))
 
     if alerts:
         st.divider()
@@ -1616,6 +1704,45 @@ with tab3:
                 key="scb_to_discontinue",
             )
 
+            # ── SCB TAPER PATHWAY SELECTION ────────────────────────────────
+            st.divider()
+            st.markdown("**SCB Taper Pathway:**")
+            scb_pathway = st.radio(
+                "Select taper strategy:",
+                options=[
+                    "Delphi Consensus — Standard early taper (begin from week 1)",
+                    "Conservative / Sperling — Defer SCB taper until cenobamate reaches 100 mg/day",
+                    "Reactive — Defer SCB reduction until symptoms emerge (dizziness, ataxia, diplopia)",
+                ],
+                key="scb_pathway",
+                help=(
+                    "Delphi: Steinhoff 2024 — proactive SCB reduction from cenobamate initiation.\n"
+                    "Conservative/Sperling: Hold SCB at baseline until cenobamate reaches 100 mg/day "
+                    "to avoid early seizure worsening during low-dose cenobamate titration. "
+                    "Preferred in patients with high seizure burden or high risk from breakthrough seizures.\n"
+                    "Reactive: Monitor and reduce only if CNS adverse effects (dizziness, ataxia, "
+                    "diplopia, sedation) emerge during titration."
+                ),
+            )
+            if "Sperling" in scb_pathway:
+                st.info(
+                    "**Conservative pathway selected:** The SCB taper will begin only after cenobamate "
+                    "reaches 100 mg/day (weeks 7-8). This reduces the risk of seizure worsening during "
+                    "low-dose cenobamate initiation. The titration table will reflect this delayed start. "
+                    "Evidence basis: Prof. Michael Sperling expert recommendation; Delphi panel (Steinhoff 2024)."
+                )
+            elif "Reactive" in scb_pathway:
+                st.info(
+                    "**Reactive pathway selected:** The SCB dose will be maintained throughout titration. "
+                    "Reduce only if CNS adverse effects emerge. Monitor closely at each visit."
+                )
+            else:
+                st.info(
+                    "**Delphi consensus pathway selected:** Standard proactive taper beginning "
+                    "from cenobamate initiation (Steinhoff 2024; Smith 2022)."
+                )
+            st.session_state["scb_pathway"] = scb_pathway
+
             if chosen and chosen not in ("— Physician decision pending —", "None — maintain all SCBs (document rationale)"):
                 base = sd[chosen].get("dose", 0)
                 st.success(
@@ -1678,12 +1805,25 @@ with tab4:
             taper_drug = scb_choice
 
         if taper_drug:
+            pathway = st.session_state.get("scb_pathway", "")
+            if "Sperling" in pathway:
+                pathway_label = "Conservative / Sperling pathway — taper begins at cenobamate 100 mg/day (weeks 7–8)"
+                pathway_color = "#E8F5E9"
+                pathway_border = "#2E7D32"
+            elif "Reactive" in pathway:
+                pathway_label = "Reactive pathway — taper begins only if CNS adverse effects emerge"
+                pathway_color = "#FFF8E1"
+                pathway_border = "#F9A825"
+            else:
+                pathway_label = "Delphi consensus pathway — standard proactive taper from week 1"
+                pathway_color = "#FFF3E0"
+                pathway_border = "#E65100"
+
             st.markdown(
-                f"<div style='background:#FFF3E0;border-left:4px solid #E65100;"
+                f"<div style='background:{pathway_color};border-left:4px solid {pathway_border};"
                 f"padding:10px 16px;border-radius:6px;margin-bottom:12px'>"
-                f"⚡ <b>Delphi panel recommendation applied:</b> "
-                f"<b>{taper_drug}</b> taper schedule is included in the table below "
-                f"(12-week step-wise discontinuation alongside cenobamate titration).<br>"
+                f"⚡ <b>SCB taper decision recorded:</b> "
+                f"<b>{taper_drug}</b> — {pathway_label}.<br>"
                 f"<span style='font-size:11px;color:#666'>"
                 f"Basis: Steinhoff BJ et al., Ther Adv Neurol Disord 2024</span></div>",
                 unsafe_allow_html=True,
@@ -1821,14 +1961,14 @@ with tab4:
         st.caption(
             "This tool provides clinical decision support only. "
             "All dosing decisions remain the sole responsibility of the treating physician. "
-            "Evidence base: 21 peer-reviewed publications and regulatory documents (2019–2026)."
+            "Evidence base: 23 peer-reviewed publications and regulatory documents (2019–2026)."
         )
 
 # ──────────────────────────────────────────────────────────────────────────────
 # TAB 5 — Evidence Base
 # ──────────────────────────────────────────────────────────────────────────────
 with tab5:
-    st.subheader("Full Evidence Base — 21 Publications and Regulatory Documents (2019–2026)")
+    st.subheader("Full Evidence Base — 23 Publications and Regulatory Documents (2019–2026)")
     st.caption(
         "All pharmacokinetic interaction logic, dose adjustment recommendations, "
         "and safety flags in this tool are derived from the following sources."
