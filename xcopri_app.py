@@ -673,6 +673,66 @@ DRUG_DB = {
         ),
     },
 
+    "Zonisamide": {
+        "unit": "mg", "has_serum": False,
+        "tablet_sizes": [25, 50, 100],
+        "splittable": False,
+        "risk": "LOW",
+        "action": "No PK adjustment expected — monitor for additive CNS effects",
+        "mechanism": (
+            "Zonisamide is a sodium channel blocker (and carbonic anhydrase inhibitor). "
+            "It is primarily metabolised via CYP3A4 acetylation and non-CYP reduction; "
+            "cenobamate-mediated CYP3A4 induction may moderately reduce zonisamide levels. "
+            "No significant CYP2C19-mediated elevation is expected. "
+            "Both drugs cause CNS adverse effects (dizziness, cognitive slowing, fatigue) — "
+            "additive pharmacodynamic burden is possible. "
+            "As a concomitant SCB, proactive discontinuation per Delphi panel recommendation applies."
+        ),
+        "recommendation": (
+            "• No dose adjustment required on pharmacokinetic grounds.\n"
+            "• Monitor for additive CNS adverse effects (dizziness, cognitive slowing, "
+            "somnolence) at each visit.\n"
+            "• Consider proactive discontinuation as per SCB rationalisation guidance "
+            "(Steinhoff 2024 Delphi panel).\n"
+            "• Mild CYP3A4 induction by cenobamate may reduce zonisamide levels — "
+            "monitor for loss of seizure control."
+        ),
+        "pct_per_period": [0, 0, 0, 0, 0, 0],
+        "serum_toxic_high": None,
+        "max_dose_warning": 600,
+        "references": ["Roberti2021", "Steinhoff2024", "AbouKhalil2022"],
+        "two_way": None,
+    },
+
+    "Rufinamide": {
+        "unit": "mg", "has_serum": False,
+        "tablet_sizes": [100, 200, 400],
+        "splittable": True,
+        "risk": "LOW-MODERATE",
+        "action": "Potential dose INCREASE — CYP3A4 induction may reduce rufinamide levels",
+        "mechanism": (
+            "Rufinamide is a sodium channel blocker used primarily in Lennox-Gastaut syndrome. "
+            "It is metabolised primarily by hydrolysis (not CYP), but CYP3A4 induction by "
+            "cenobamate may contribute to modest reductions in rufinamide exposure. "
+            "As a concomitant SCB, proactive discontinuation per Delphi panel recommendation applies. "
+            "Rufinamide also shortens the QT interval — combined with cenobamate's QT-shortening "
+            "effect, additional cardiac monitoring may be warranted."
+        ),
+        "recommendation": (
+            "• Monitor for loss of seizure control from week 5 (especially in Lennox-Gastaut).\n"
+            "• Consider proactive discontinuation as per SCB rationalisation guidance "
+            "(Steinhoff 2024 Delphi panel).\n"
+            "• Both drugs shorten the QT interval — obtain a baseline ECG and monitor "
+            "if cardiac symptoms emerge.\n"
+            "• No well-characterised dose-adjustment protocol exists; titrate by clinical response."
+        ),
+        "pct_per_period": [0, 0, 0, 0, 0, 0],
+        "serum_toxic_high": None,
+        "max_dose_warning": 3200,
+        "references": ["Roberti2021", "Steinhoff2024", "Zaccara2021"],
+        "two_way": None,
+    },
+
     "Everolimus": {
         "unit": "mg", "has_serum": True,
         "tablet_sizes": [0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10],
@@ -822,10 +882,9 @@ SCB_DRUGS = {
     "Oxcarbazepine":  "Fast-inactivation SCB (pro-drug → licarbazepine/MHD)",
     "Eslicarbazepine acetate (ESL)": "Fast-inactivation SCB (pro-drug → S-licarbazepine)",
     "Phenytoin":      "Fast-inactivation SCB (non-linear PK, CYP2C19 substrate)",
-    "Phenobarbital":  "GABA-A potentiator + SCB component + CYP inducer",
-    "Primidone":      "Metabolized to phenobarbital (SCB + GABA-A potentiator)",
     "Lamotrigine":    "Fast/slow-inactivation SCB (UGT1A4 substrate)",
-    "Felbamate":      "SCB + GABA-A + NMDA antagonist (Black Box Warning)",
+    "Zonisamide":     "Mixed-mechanism SCB (also carbonic anhydrase inhibitor)",
+    "Rufinamide":     "Slow-inactivation SCB (triazole derivative; Lennox-Gastaut)",
 }
 
 TAPER_SCHEDULE = {
@@ -834,10 +893,9 @@ TAPER_SCHEDULE = {
     "Oxcarbazepine": {"mode": "pct",  "values": [100, 80, 60, 40, 20, 0]},
     "Eslicarbazepine acetate (ESL)": {"mode": "pct", "values": [100, 80, 60, 40, 20, 0]},
     "Phenytoin":     {"mode": "pct",  "values": [100, 75, 50, 25, 0,  0]},
-    "Phenobarbital": {"mode": "pct",  "values": [100, 85, 70, 50, 25, 0]},
-    "Primidone":     {"mode": "pct",  "values": [100, 85, 70, 50, 25, 0]},
     "Lamotrigine":   {"mode": "pct",  "values": [100, 75, 50, 25, 0,  0]},
-    "Felbamate":     {"mode": "pct",  "values": [100, 85, 70, 55, 40, 25]},
+    "Zonisamide":    {"mode": "pct",  "values": [100, 80, 60, 40, 20, 0]},
+    "Rufinamide":    {"mode": "pct",  "values": [100, 80, 60, 40, 20, 0]},
 }
 
 # ── Cascade DDI: when an INDUCER is tapered, these drugs' levels will RISE ───
@@ -1449,9 +1507,9 @@ with tab1:
             "**Mild hepatic impairment (Child-Pugh B):** Maximum recommended dose is 200 mg/day. "
             "Monitor liver function tests every 4 weeks."))
     if egfr and egfr < 30:
-        alerts.append(("error",
-            "**Severe renal impairment (eGFR <30 ml/min):** Maximum recommended dose is 200 mg/day. "
-            "Increase monitoring frequency."))
+        alerts.append(("warning",
+            "**Severe renal impairment (eGFR <30 ml/min):** Dose limitation required — maximum recommended dose is 200 mg/day. "
+            "Increase renal function monitoring frequency (FDA/EMA prescribing information)."))
     elif egfr and egfr < 60:
         alerts.append(("warning",
             "**Moderate renal impairment (eGFR 30-60 ml/min):** Consider dose cap and slow titration. "
