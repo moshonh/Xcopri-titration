@@ -1,0 +1,1252 @@
+{
+  "manuscript_path": "/home/ubuntu/upload/cenobamate_article_revisedfinal.docx",
+  "verification_date_utc": "2026-11-22",
+  "scope": "Exactly the final manuscript’s 23 ordered sources: 21 peer-reviewed papers and two official regulatory documents.",
+  "methods": "Each paper title, first author, journal, year, DOI and PMID matched Europe PMC and Crossref metadata. Titles compared after Unicode accent, punctuation, case and whitespace normalization, with no substantive wording differences. Regulatory PDFs checked from FDA/EMA official sources. Data checked by reading actual metadata, not HTTP status alone.",
+  "count": 23,
+  "doi_verified_count": 21,
+  "regulatory_non_doi_count": 2,
+  "unverified_doi_count": 0,
+  "excluded_app_only_source": {
+    "key": "Krauss2025",
+    "reason": "Not one of the final manuscript’s 23 sources; not reassigned to another article. Consumer drug-reference mappings must remove or separately label this source."
+  },
+  "sources": [
+    {
+      "manuscript_number": 1,
+      "registry_key": "FDA2019",
+      "source_type": "regulatory_document_NOT_DOI",
+      "manuscript_citation": "1.\tUS Food and Drug Administration. XCOPRI (cenobamate) Prescribing Information [updated August 2025]. Silver Spring, MD: FDA; 2025. https://www.accessdata.fda.gov/drugsatfda_docs/label/2025/212839s013lbl.pdf.",
+      "actual_title": "XCOPRI (cenobamate) Prescribing Information [revised August 2025]",
+      "authors": "US Food and Drug Administration",
+      "journal_or_agency": "FDA regulatory document — not a DOI",
+      "publication_year": 2025,
+      "doi": null,
+      "pmid": null,
+      "source_url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2025/212839s013lbl.pdf",
+      "additional_official_url": "https://www.fda.gov/media/189733/download",
+      "metadata_verification": {
+        "status": "VERIFIED_REGULATORY_DOCUMENT",
+        "method": "Read official regulatory document or official EPAR page and linked product information. URL is not a DOI.",
+        "notes": "Original FDA PDF verified by reading prescribing-information contents; revised 8/2025. The initial direct HTTP request timed out, but subsequent webpage extraction succeeded. Liver injury is under Warnings and Precautions section 5.4, not a boxed warning."
+      },
+      "original_app_doi_or_url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2025/212839s013lbl.pdf",
+      "original_app_pmid": null
+    },
+    {
+      "manuscript_number": 2,
+      "registry_key": "EMA2021",
+      "source_type": "regulatory_document_NOT_DOI",
+      "manuscript_citation": "2.\tEuropean Medicines Agency. Ontozry (cenobamate): Summary of Product Characteristics. Amsterdam: EMA; 2021.",
+      "actual_title": "Ontozry (cenobamate): Summary of Product Characteristics",
+      "authors": "European Medicines Agency",
+      "journal_or_agency": "EMA regulatory document — not a DOI",
+      "publication_year": 2021,
+      "doi": null,
+      "pmid": null,
+      "source_url": "https://www.ema.europa.eu/en/documents/product-information/ontozry-epar-product-information_en.pdf",
+      "additional_official_url": "https://www.ema.europa.eu/en/medicines/human/EPAR/ontozry",
+      "metadata_verification": {
+        "status": "VERIFIED_REGULATORY_DOCUMENT",
+        "method": "Read official regulatory document or official EPAR page and linked product information. URL is not a DOI.",
+        "notes": "Official EPAR page confirms the linked product information contains the SmPC. Authorization 26 March 2021; linked product information was updated 1 July 2026. This is a live/current document, not a frozen 2021 version."
+      },
+      "original_app_doi_or_url": "https://www.ema.europa.eu/en/medicines/human/EPAR/ontozry",
+      "original_app_pmid": null
+    },
+    {
+      "manuscript_number": 3,
+      "registry_key": "Krauss2020",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "3.\tKrauss, G. L. et al. Safety and efficacy of adjunctive cenobamate (YKP3089) in patients with uncontrolled focal seizures: a multicentre, double-blind, randomised, placebo-controlled, dose-response trial. Lancet Neurol. 19, 38–48 (2020).",
+      "actual_title": "Safety and efficacy of adjunctive cenobamate (YKP3089) in patients with uncontrolled focal seizures: a multicentre, double-blind, randomised, placebo-controlled, dose-response trial",
+      "authors": "Krauss GL, Klein P, Brandt C, Lee SK, Milanov I, Milovanovic M, Steinhoff BJ, Kamin M.",
+      "journal_or_agency": "The Lancet. Neurology",
+      "publication_year": 2020,
+      "doi": "10.1016/s1474-4422(19)30399-0",
+      "pmid": "31734103",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/31734103/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1016%2Fs1474-4422%2819%2930399-0",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1016%2Fs1474-4422%2819%2930399-0&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Safety and efficacy of adjunctive cenobamate (YKP3089) in patients with uncontrolled focal seizures: a multicentre, double-blind, randomised, placebo-controlled, dose-response trial",
+        "crossref_first_author": "Krauss",
+        "crossref_journal": "The Lancet Neurology",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2020,
+              1
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2020,
+              1
+            ]
+          ]
+        },
+        "crossref_published_online": null,
+        "crossref_volume": "19",
+        "crossref_pages_or_article_number": "38-48",
+        "notes": []
+      },
+      "original_app_doi": "10.1016/S1474-4422(19)30399-0",
+      "original_app_pmid": "31734103",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": false
+    },
+    {
+      "manuscript_number": 4,
+      "registry_key": "Roberti2021",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "4.\tRoberti, R. et al. Pharmacology of Cenobamate: Mechanism of Action, Pharmacokinetics, Drug-Drug Interactions and Tolerability. CNS Drugs 35, 609–618 (2021).",
+      "actual_title": "Pharmacology of Cenobamate: Mechanism of Action, Pharmacokinetics, Drug-Drug Interactions and Tolerability",
+      "authors": "Roberti R, De Caro C, Iannone LF, Zaccara G, Lattanzi S, Russo E.",
+      "journal_or_agency": "CNS drugs",
+      "publication_year": 2021,
+      "doi": "10.1007/s40263-021-00819-8",
+      "pmid": "33993416",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/33993416/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1007%2Fs40263-021-00819-8",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1007%2Fs40263-021-00819-8&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Pharmacology of Cenobamate: Mechanism of Action, Pharmacokinetics, Drug–Drug Interactions and Tolerability",
+        "crossref_first_author": "Roberti",
+        "crossref_journal": "CNS Drugs",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2021,
+              5,
+              16
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2021,
+              6
+            ]
+          ]
+        },
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2021,
+              5,
+              16
+            ]
+          ]
+        },
+        "crossref_volume": "35",
+        "crossref_pages_or_article_number": "609-618",
+        "notes": [
+          "Initial Crossref request returned HTTP 429. A later retry succeeded; Springer and PubMed independently confirmed the bibliographic identity."
+        ]
+      },
+      "original_app_doi": "10.1007/s40263-021-00819-8",
+      "original_app_pmid": "33966208",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": true
+    },
+    {
+      "manuscript_number": 5,
+      "registry_key": "Greene2022",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "5.\tGreene, S. A. et al. Effect of cenobamate on the single-dose pharmacokinetics of multiple cytochrome P450 probes using a cocktail approach in healthy subjects. Clin. Transl. Sci. 15, 899–911 (2022).",
+      "actual_title": "Effect of cenobamate on the single-dose pharmacokinetics of multiple cytochrome P450 probes using a cocktail approach in healthy subjects",
+      "authors": "Greene SA, Kwak C, Kamin M, Vernillet L, Glenn KJ, Gabriel L, Kim HW.",
+      "journal_or_agency": "Clinical and translational science",
+      "publication_year": 2022,
+      "doi": "10.1111/cts.13204",
+      "pmid": "34877801",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/34877801/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1111%2Fcts.13204",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1111%2Fcts.13204&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Effect of cenobamate on the single‐dose pharmacokinetics of multiple cytochrome P450 probes using a cocktail approach in healthy subjects",
+        "crossref_first_author": "Greene",
+        "crossref_journal": "Clinical and Translational Science",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2021,
+              12,
+              13
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2022,
+              4
+            ]
+          ]
+        },
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2021,
+              12,
+              13
+            ]
+          ]
+        },
+        "crossref_volume": "15",
+        "crossref_pages_or_article_number": "899-911",
+        "notes": [
+          "Online publication 2021; volume/issue publication and manuscript citation are 2022."
+        ]
+      },
+      "original_app_doi": "10.1111/cts.13234",
+      "original_app_pmid": "38573131",
+      "doi_changed_from_original": true,
+      "pmid_changed_from_original": true
+    },
+    {
+      "manuscript_number": 6,
+      "registry_key": "Smith2022",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "6.\tSmith, M. C. et al. Dose Adjustment of Concomitant Antiseizure Medications During Cenobamate Treatment: Expert Opinion Consensus Recommendations. Neurol. Ther. 11, 1705–1720 (2022).",
+      "actual_title": "Dose Adjustment of Concomitant Antiseizure Medications During Cenobamate Treatment: Expert Opinion Consensus Recommendations",
+      "authors": "Smith MC, Klein P, Krauss GL, Rashid S, Seiden LG, Stern JM, Rosenfeld WE.",
+      "journal_or_agency": "Neurology and therapy",
+      "publication_year": 2022,
+      "doi": "10.1007/s40120-022-00400-5",
+      "pmid": "36057761",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/36057761/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1007%2Fs40120-022-00400-5",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1007%2Fs40120-022-00400-5&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Dose Adjustment of Concomitant Antiseizure Medications During Cenobamate Treatment: Expert Opinion Consensus Recommendations",
+        "crossref_first_author": "Smith",
+        "crossref_journal": "Neurology and Therapy",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2022,
+              9,
+              3
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2022,
+              12
+            ]
+          ]
+        },
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2022,
+              9,
+              3
+            ]
+          ]
+        },
+        "crossref_volume": "11",
+        "crossref_pages_or_article_number": "1705-1720",
+        "notes": []
+      },
+      "original_app_doi": "10.1007/s40120-022-00400-5",
+      "original_app_pmid": "35962907",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": true
+    },
+    {
+      "manuscript_number": 7,
+      "registry_key": "Steinhoff2024",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "7.\tSteinhoff, B. J. et al. Therapeutic strategies during cenobamate treatment initiation: Delphi panel recommendations. Ther. Adv. Neurol. Disord. 17, 17562864241256733 (2024).",
+      "actual_title": "Therapeutic strategies during cenobamate treatment initiation: Delphi panel recommendations",
+      "authors": "Steinhoff BJ, Ben-Menachem E, Klein P, Peltola J, Schmitz B, Thomas RH, Villanueva V.",
+      "journal_or_agency": "Therapeutic advances in neurological disorders",
+      "publication_year": 2024,
+      "doi": "10.1177/17562864241256733",
+      "pmid": "38883228",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/38883228/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1177%2F17562864241256733",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1177%2F17562864241256733&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Therapeutic strategies during cenobamate treatment initiation: Delphi panel recommendations",
+        "crossref_first_author": "Steinhoff",
+        "crossref_journal": "Therapeutic Advances in Neurological Disorders",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2024,
+              1
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2024,
+              1
+            ]
+          ]
+        },
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2024,
+              6,
+              14
+            ]
+          ]
+        },
+        "crossref_volume": "17",
+        "crossref_pages_or_article_number": "17562864241256733",
+        "notes": []
+      },
+      "original_app_doi": "10.1177/17562864241256733",
+      "original_app_pmid": "38919279",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": true
+    },
+    {
+      "manuscript_number": 8,
+      "registry_key": "Landmark2026",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "8.\tJohannessen Landmark, C. et al. Pharmacokinetic variability and complex two-way interactions with cenobamate in patients with refractory epilepsy. Epilepsia 67, 2820–2835 (2026).",
+      "actual_title": "Pharmacokinetic variability and complex two-way interactions with cenobamate in patients with refractory epilepsy",
+      "authors": "Johannessen Landmark C, Belkilani H, Awad L, Burns ML, Gottås A, Svendsen T, Sætre E.",
+      "journal_or_agency": "Epilepsia",
+      "publication_year": 2026,
+      "doi": "10.1002/epi.70184",
+      "pmid": "41874535",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/41874535/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1002%2Fepi.70184",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1002%2Fepi.70184&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Pharmacokinetic variability and complex two‐way interactions with cenobamate in patients with refractory epilepsy",
+        "crossref_first_author": "Johannessen Landmark",
+        "crossref_journal": "Epilepsia",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2026,
+              3,
+              24
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2026,
+              6
+            ]
+          ]
+        },
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2026,
+              3,
+              24
+            ]
+          ]
+        },
+        "crossref_volume": "67",
+        "crossref_pages_or_article_number": "2820-2835",
+        "notes": [
+          "The abstract reports highly variable interactions; it does not establish a uniform 20–40% decrease for all concomitant ASMs."
+        ]
+      },
+      "original_app_doi": "10.1002/epi.70184",
+      "original_app_pmid": null,
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": false
+    },
+    {
+      "manuscript_number": 9,
+      "registry_key": "Charlier2026",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "9.\tCharlier, B. et al. Do Cenobamate Pharmacokinetics Change with Co-Administered Antiseizure Medications? An Exploratory Analysis of Responder Patients with Focal Drug-Resistant Epilepsy. Pharmaceutics 18, 92 (2026).",
+      "actual_title": "Do Cenobamate Pharmacokinetics Change with Co-Administered Antiseizure Medications? An Exploratory Analysis of Responder Patients with Focal Drug-Resistant Epilepsy",
+      "authors": "Charlier B, Izzo V, Assenza G, Balsamo AC, Cirillo F, Coglianese A, Di Bonaventura C, Fernandes M, Gambardella A, Cerulli Irelli E, Liguori C, Rufolo S, Sammarra I, Filippelli A, Operto FF.",
+      "journal_or_agency": "Pharmaceutics",
+      "publication_year": 2026,
+      "doi": "10.3390/pharmaceutics18010092",
+      "pmid": "41599199",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/41599199/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.3390%2Fpharmaceutics18010092",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.3390%2Fpharmaceutics18010092&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Do Cenobamate Pharmacokinetics Change with Co-Administered Antiseizure Medications? An Exploratory Analysis of Responder Patients with Focal Drug-Resistant Epilepsy",
+        "crossref_first_author": "Charlier",
+        "crossref_journal": "Pharmaceutics",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2026,
+              1,
+              10
+            ]
+          ]
+        },
+        "crossref_published_print": null,
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2026,
+              1,
+              10
+            ]
+          ]
+        },
+        "crossref_volume": "18",
+        "crossref_pages_or_article_number": "92",
+        "notes": [
+          "The 17-person study is exploratory; carbamazepine and valproate trends were not statistically significant. No validated 20–40% CBZ/OXC/LTG reduction should be inferred."
+        ]
+      },
+      "original_app_doi": "10.3390/pharmaceutics18010092",
+      "original_app_pmid": null,
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": false
+    },
+    {
+      "manuscript_number": 10,
+      "registry_key": "Karazniewicz2021",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "10.\tKaraźniewicz-Łada, M., Główka, A. K., Mikulska, A. A. & Główka, F. K. Pharmacokinetic Drug-Drug Interactions among Antiepileptic Drugs, Including CBD, Drugs Used to Treat COVID-19 and Nutrients. Int. J. Mol. Sci. 22, 9582 (2021).",
+      "actual_title": "Pharmacokinetic Drug-Drug Interactions among Antiepileptic Drugs, Including CBD, Drugs Used to Treat COVID-19 and Nutrients",
+      "authors": "Karaźniewicz-Łada M, Główka AK, Mikulska AA, Główka FK.",
+      "journal_or_agency": "International journal of molecular sciences",
+      "publication_year": 2021,
+      "doi": "10.3390/ijms22179582",
+      "pmid": "34502487",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/34502487/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.3390%2Fijms22179582",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.3390%2Fijms22179582&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Pharmacokinetic Drug–Drug Interactions among Antiepileptic Drugs, Including CBD, Drugs Used to Treat COVID-19 and Nutrients",
+        "crossref_first_author": "Karaźniewicz-Łada",
+        "crossref_journal": "International Journal of Molecular Sciences",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2021,
+              9,
+              3
+            ]
+          ]
+        },
+        "crossref_published_print": null,
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2021,
+              9,
+              3
+            ]
+          ]
+        },
+        "crossref_volume": "22",
+        "crossref_pages_or_article_number": "9582",
+        "notes": []
+      },
+      "original_app_doi": "10.3390/ijms22179582",
+      "original_app_pmid": "34502492",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": true
+    },
+    {
+      "manuscript_number": 11,
+      "registry_key": "Cohen2026",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "11.\tCohen, H., Bahash, N., Ben-Shushan, T., Matok, I. & Eyal, S. Induction of cytochrome P450 2C9 and P-glycoprotein activity by antiseizure medications: A systematic review and network meta-analysis. Epileptic Disord. Int. Epilepsy J. Videotape 28, 855–867 (2026).",
+      "actual_title": "Induction of cytochrome P450 2C9 and P-glycoprotein activity by antiseizure medications: A systematic review and network meta-analysis",
+      "authors": "Cohen H, Bahash N, Ben-Shushan T, Matok I, Eyal S.",
+      "journal_or_agency": "Epileptic disorders : international epilepsy journal with videotape",
+      "publication_year": 2026,
+      "doi": "10.1002/epd2.70232",
+      "pmid": "41948839",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/41948839/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1002%2Fepd2.70232",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1002%2Fepd2.70232&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Induction of cytochrome P450 2C9 and P‐glycoprotein activity by antiseizure medications: A systematic review and network meta‐analysis",
+        "crossref_first_author": "Cohen",
+        "crossref_journal": "Epileptic Disorders",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2026,
+              4,
+              8
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2026,
+              6
+            ]
+          ]
+        },
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2026,
+              4,
+              8
+            ]
+          ]
+        },
+        "crossref_volume": "28",
+        "crossref_pages_or_article_number": "855-867",
+        "notes": []
+      },
+      "original_app_doi": "10.1002/epd2.70232",
+      "original_app_pmid": null,
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": false
+    },
+    {
+      "manuscript_number": 12,
+      "registry_key": "Osborn2023",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "12.\tOsborn, M. & Abou-Khalil, B. The cenobamate-clobazam interaction- evidence of synergy in addition to pharmacokinetic interaction. Epilepsy Behav. EB 142, 109156 (2023).",
+      "actual_title": "The cenobamate-clobazam interaction- evidence of synergy in addition to pharmacokinetic interaction",
+      "authors": "Osborn M, Abou-Khalil B.",
+      "journal_or_agency": "Epilepsy & behavior : E&B",
+      "publication_year": 2023,
+      "doi": "10.1016/j.yebeh.2023.109156",
+      "pmid": "37037060",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/37037060/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1016%2Fj.yebeh.2023.109156",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1016%2Fj.yebeh.2023.109156&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "The cenobamate-clobazam interaction- evidence of synergy in addition to pharmacokinetic interaction",
+        "crossref_first_author": "Osborn",
+        "crossref_journal": "Epilepsy & Behavior",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2023,
+              5
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2023,
+              5
+            ]
+          ]
+        },
+        "crossref_published_online": null,
+        "crossref_volume": "142",
+        "crossref_pages_or_article_number": "109156",
+        "notes": [
+          "The official title contains the word synergy; the small observational report describes possible synergy, not conclusive proof."
+        ]
+      },
+      "original_app_doi": "10.1016/j.yebeh.2023.109156",
+      "original_app_pmid": "36963163",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": true
+    },
+    {
+      "manuscript_number": 13,
+      "registry_key": "Ciullo2026",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "13.\tCiullo, I. et al. Effectiveness of adjunctive low-dose clobazam in adults with focal drug-resistant epilepsy and incomplete response to cenobamate: A real-world study. Epilepsia Open 11, 962–972 (2026).",
+      "actual_title": "Effectiveness of adjunctive low-dose clobazam in adults with focal drug-resistant epilepsy and incomplete response to cenobamate: A real-world study",
+      "authors": "Ciullo I, D'Aniello A, Panzini C, Salamone EM, Quarato PP, Grammaldo LG, Dal Pozzo M, Abeni D, Di Gennaro G.",
+      "journal_or_agency": "Epilepsia open",
+      "publication_year": 2026,
+      "doi": "10.1002/epi4.70261",
+      "pmid": "41919359",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/41919359/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1002%2Fepi4.70261",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1002%2Fepi4.70261&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Effectiveness of adjunctive low‐dose clobazam in adults with focal drug‐resistant epilepsy and incomplete response to cenobamate: A real‐world study",
+        "crossref_first_author": "Ciullo",
+        "crossref_journal": "Epilepsia Open",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2026,
+              4,
+              1
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2026,
+              6
+            ]
+          ]
+        },
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2026,
+              4,
+              1
+            ]
+          ]
+        },
+        "crossref_volume": "11",
+        "crossref_pages_or_article_number": "962-972",
+        "notes": []
+      },
+      "original_app_doi": "10.1002/epi4.70261",
+      "original_app_pmid": null,
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": false
+    },
+    {
+      "manuscript_number": 14,
+      "registry_key": "Operto2025",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "14.\tOperto, F. F. et al. Clinical predictors and concomitant antiseizure medications effects on seizure control in relation to plasma cenobamate concentration: a multicenter retrospective study. Front. Pharmacol. 16, 1668382 (2025).",
+      "actual_title": "Clinical predictors and concomitant antiseizure medications effects on seizure control in relation to plasma cenobamate concentration: a multicenter retrospective study",
+      "authors": "Operto FF, Izzo V, Assenza G, Balsamo AC, Canafoglia L, Cerulli Irelli E, Coglianese A, Di Bonaventura C, Gambardella A, Liguori C, Pastorino GMG, Pezzella M, Renna R, Sammarra I, Tombini M, Fernandes M, Antonucci M, Charlier B.",
+      "journal_or_agency": "Frontiers in pharmacology",
+      "publication_year": 2025,
+      "doi": "10.3389/fphar.2025.1668382",
+      "pmid": "41059206",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/41059206/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.3389%2Ffphar.2025.1668382",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.3389%2Ffphar.2025.1668382&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Clinical predictors and concomitant antiseizure medications effects on seizure control in relation to plasma cenobamate concentration: a multicenter retrospective study",
+        "crossref_first_author": "Operto",
+        "crossref_journal": "Frontiers in Pharmacology",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2025,
+              9,
+              22
+            ]
+          ]
+        },
+        "crossref_published_print": null,
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2025,
+              9,
+              22
+            ]
+          ]
+        },
+        "crossref_volume": "16",
+        "crossref_pages_or_article_number": "1668382",
+        "notes": []
+      },
+      "original_app_doi": "10.3389/fphar.2025.1668382",
+      "original_app_pmid": null,
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": false
+    },
+    {
+      "manuscript_number": 15,
+      "registry_key": "Sperling2020",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "15.\tSperling, M. R. et al. Cenobamate (YKP3089) as adjunctive treatment for uncontrolled focal seizures in a large, phase 3, multicenter, open-label safety study. Epilepsia 61, 1099–1108 (2020).",
+      "actual_title": "Cenobamate (YKP3089) as adjunctive treatment for uncontrolled focal seizures in a large, phase 3, multicenter, open-label safety study",
+      "authors": "Sperling MR, Klein P, Aboumatar S, Gelfand M, Halford JJ, Krauss GL, Rosenfeld WE, Vossler DG, Wechsler R, Borchert L, Kamin M.",
+      "journal_or_agency": "Epilepsia",
+      "publication_year": 2020,
+      "doi": "10.1111/epi.16525",
+      "pmid": "32396252",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/32396252/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1111%2Fepi.16525",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1111%2Fepi.16525&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Cenobamate (YKP3089) as adjunctive treatment for uncontrolled focal seizures in a large, phase 3, multicenter, open‐label safety study",
+        "crossref_first_author": "Sperling",
+        "crossref_journal": "Epilepsia",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2020,
+              5,
+              12
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2020,
+              6
+            ]
+          ]
+        },
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2020,
+              5,
+              12
+            ]
+          ]
+        },
+        "crossref_volume": "61",
+        "crossref_pages_or_article_number": "1099-1108",
+        "notes": [
+          "No cases of DRESS in the study does not establish that slow titration prevents DRESS; the FDA label says so explicitly."
+        ]
+      },
+      "original_app_doi": "10.1111/epi.16525",
+      "original_app_pmid": "32162327",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": true
+    },
+    {
+      "manuscript_number": 16,
+      "registry_key": "Villani2022",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "16.\tVillani, F. et al. Use of cenobamate for the treatment of focal epilepsy: an Italian expert opinion paper. Expert Rev. Neurother. 22, 935–940 (2022).",
+      "actual_title": "Use of cenobamate for the treatment of focal epilepsy: an Italian expert opinion paper",
+      "authors": "Villani F, Cianci V, Di Bonaventura C, Di Gennaro G, Galimberti CA, Guerrini R, La Neve A, Mecarelli O, Pietrafusa N, Specchio N, Vigevano F, Perucca E.",
+      "journal_or_agency": "Expert review of neurotherapeutics",
+      "publication_year": 2022,
+      "doi": "10.1080/14737175.2023.2171291",
+      "pmid": "36662573",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/36662573/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1080%2F14737175.2023.2171291",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1080%2F14737175.2023.2171291&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Use of cenobamate for the treatment of focal epilepsy: an Italian expert opinion paper",
+        "crossref_first_author": "Villani",
+        "crossref_journal": "Expert Review of Neurotherapeutics",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2022,
+              11,
+              2
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2022,
+              11,
+              2
+            ]
+          ]
+        },
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2023,
+              1,
+              24
+            ]
+          ]
+        },
+        "crossref_volume": "22",
+        "crossref_pages_or_article_number": "935-940",
+        "notes": [
+          "Journal volume is dated 2022; online publication was January 2023. The 2023 digits in the DOI do not change the 2022 issue citation."
+        ]
+      },
+      "original_app_doi": "10.1080/14737175.2022.2136505",
+      "original_app_pmid": null,
+      "doi_changed_from_original": true,
+      "pmid_changed_from_original": false
+    },
+    {
+      "manuscript_number": 17,
+      "registry_key": "Zaccara2021",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "17.\tZaccara, G., Lattanzi, S., Leo, A. & Russo, E. Critical Appraisal of Cenobamate as Adjunctive Treatment of Focal Seizures in Adults. Neuropsychiatr. Dis. Treat. 17, 3447–3457 (2021).",
+      "actual_title": "Critical Appraisal of Cenobamate as Adjunctive Treatment of Focal Seizures in Adults",
+      "authors": "Zaccara G, Lattanzi S, Leo A, Russo E.",
+      "journal_or_agency": "Neuropsychiatric disease and treatment",
+      "publication_year": 2021,
+      "doi": "10.2147/ndt.s281490",
+      "pmid": "34876814",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/34876814/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.2147%2Fndt.s281490",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.2147%2Fndt.s281490&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Critical Appraisal of Cenobamate as Adjunctive Treatment of Focal Seizures in Adults",
+        "crossref_first_author": "Zaccara",
+        "crossref_journal": "Neuropsychiatric Disease and Treatment",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2021,
+              11
+            ]
+          ]
+        },
+        "crossref_published_print": null,
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2021,
+              11
+            ]
+          ]
+        },
+        "crossref_volume": "Volume 17",
+        "crossref_pages_or_article_number": "3447-3457",
+        "notes": []
+      },
+      "original_app_doi": "10.2147/NDT.S281490",
+      "original_app_pmid": "34938073",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": true
+    },
+    {
+      "manuscript_number": 18,
+      "registry_key": "Samanta2025",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "18.\tSamanta, D. Cenobamate in pediatric epilepsy and developmental and epileptic encephalopathies: Efficacy, safety, and syndrome-specific considerations. Epilepsy Behav. EB 173, 110787 (2025).",
+      "actual_title": "Cenobamate in pediatric epilepsy and developmental and epileptic encephalopathies: Efficacy, safety, and syndrome-specific considerations",
+      "authors": "Samanta D.",
+      "journal_or_agency": "Epilepsy & behavior : E&B",
+      "publication_year": 2025,
+      "doi": "10.1016/j.yebeh.2025.110787",
+      "pmid": "41106086",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/41106086/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1016%2Fj.yebeh.2025.110787",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1016%2Fj.yebeh.2025.110787&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Cenobamate in pediatric epilepsy and developmental and epileptic encephalopathies: Efficacy, safety, and syndrome-specific considerations",
+        "crossref_first_author": "Samanta",
+        "crossref_journal": "Epilepsy & Behavior",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2025,
+              12
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2025,
+              12
+            ]
+          ]
+        },
+        "crossref_published_online": null,
+        "crossref_volume": "173",
+        "crossref_pages_or_article_number": "110787",
+        "notes": []
+      },
+      "original_app_doi": "10.1016/j.yebeh.2025.110787",
+      "original_app_pmid": "39818154",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": true
+    },
+    {
+      "manuscript_number": 19,
+      "registry_key": "AbouKhalil2022",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "19.\tAbou-Khalil, B. W. Update on Antiseizure Medications 2022. Continuum 28, 500–535 (2022).",
+      "actual_title": "Update on Antiseizure Medications 2022",
+      "authors": "Abou-Khalil BW.",
+      "journal_or_agency": "Continuum (Minneapolis, Minn.)",
+      "publication_year": 2022,
+      "doi": "10.1212/con.0000000000001104",
+      "pmid": "35393968",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/35393968/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1212%2Fcon.0000000000001104",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1212%2Fcon.0000000000001104&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Update on Antiseizure Medications 2022",
+        "crossref_first_author": "Abou-Khalil",
+        "crossref_journal": "Continuum",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2022,
+              4
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2022,
+              4
+            ]
+          ]
+        },
+        "crossref_published_online": null,
+        "crossref_volume": "28",
+        "crossref_pages_or_article_number": "500-535",
+        "notes": []
+      },
+      "original_app_doi": "10.1212/CON.0000000000001104",
+      "original_app_pmid": "35393970",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": true
+    },
+    {
+      "manuscript_number": 20,
+      "registry_key": "Schoretsanitis2022",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "20.\tSchoretsanitis, G., Deligiannidis, K. M., Paulzen, M., Spina, E. & de Leon, J. Drug-drug interactions between psychotropic medications and oral contraceptives. Expert Opin. Drug Metab. Toxicol. 18, 395–411 (2022).",
+      "actual_title": "Drug-drug interactions between psychotropic medications and oral contraceptives",
+      "authors": "Schoretsanitis G, Deligiannidis KM, Paulzen M, Spina E, de Leon J.",
+      "journal_or_agency": "Expert opinion on drug metabolism & toxicology",
+      "publication_year": 2022,
+      "doi": "10.1080/17425255.2022.2106214",
+      "pmid": "35876180",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/35876180/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1080%2F17425255.2022.2106214",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1080%2F17425255.2022.2106214&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Drug-drug interactions between psychotropic medications and oral contraceptives",
+        "crossref_first_author": "Schoretsanitis",
+        "crossref_journal": "Expert Opinion on Drug Metabolism & Toxicology",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2022,
+              6,
+              3
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2022,
+              6,
+              3
+            ]
+          ]
+        },
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2022,
+              8,
+              5
+            ]
+          ]
+        },
+        "crossref_volume": "18",
+        "crossref_pages_or_article_number": "395-411",
+        "notes": []
+      },
+      "original_app_doi": "10.1080/17425255.2022.2106214",
+      "original_app_pmid": "35849051",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": true
+    },
+    {
+      "manuscript_number": 21,
+      "registry_key": "Chung2020",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "21.\tChung, S. S. et al. Randomized phase 2 study of adjunctive cenobamate in patients with uncontrolled focal seizures. Neurology 94, e2311–e2322 (2020).",
+      "actual_title": "Randomized phase 2 study of adjunctive cenobamate in patients with uncontrolled focal seizures",
+      "authors": "Chung SS, French JA, Kowalski J, Krauss GL, Lee SK, Maciejowski M, Rosenfeld WE, Sperling MR, Mizne S, Kamin M.",
+      "journal_or_agency": "Neurology",
+      "publication_year": 2020,
+      "doi": "10.1212/wnl.0000000000009530",
+      "pmid": "32409485",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/32409485/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1212%2Fwnl.0000000000009530",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1212%2Fwnl.0000000000009530&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Randomized phase 2 study of adjunctive cenobamate in patients with uncontrolled focal seizures",
+        "crossref_first_author": "Chung",
+        "crossref_journal": "Neurology",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2020,
+              6,
+              2
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2020,
+              6,
+              2
+            ]
+          ]
+        },
+        "crossref_published_online": null,
+        "crossref_volume": "94",
+        "crossref_pages_or_article_number": null,
+        "notes": []
+      },
+      "original_app_doi": null,
+      "original_app_pmid": null,
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": false
+    },
+    {
+      "manuscript_number": 22,
+      "registry_key": "ODwyer2024",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "22.\tO’Dwyer, R. et al. Safety and Efficacy of Cenobamate for the Treatment of Focal Seizures in Older Patients: Post Hoc Analysis of a Phase III, Multicenter, Open-Label Study. Drugs Aging 41, 251–260 (2024). doi:10.1007/s40266-024-01102-3.",
+      "actual_title": "Safety and Efficacy of Cenobamate for the Treatment of Focal Seizures in Older Patients: Post Hoc Analysis of a Phase III, Multicenter, Open-Label Study",
+      "authors": "O'Dwyer R, Stern S, Wade CT, Guggilam A, Rosenfeld WE.",
+      "journal_or_agency": "Drugs & aging",
+      "publication_year": 2024,
+      "doi": "10.1007/s40266-024-01102-3",
+      "pmid": "38446341",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/38446341/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1007%2Fs40266-024-01102-3",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1007%2Fs40266-024-01102-3&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Safety and Efficacy of Cenobamate for the Treatment of Focal Seizures in Older Patients: Post Hoc Analysis of a Phase III, Multicenter, Open-Label Study",
+        "crossref_first_author": "O’Dwyer",
+        "crossref_journal": "Drugs & Aging",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2024,
+              3
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2024,
+              3
+            ]
+          ]
+        },
+        "crossref_published_online": {
+          "date-parts": [
+            [
+              2024,
+              3,
+              6
+            ]
+          ]
+        },
+        "crossref_volume": "41",
+        "crossref_pages_or_article_number": "251-260",
+        "notes": []
+      },
+      "original_app_doi": "10.1007/s40266-024-01102-3",
+      "original_app_pmid": "38446341",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": false
+    },
+    {
+      "manuscript_number": 23,
+      "registry_key": "Yoon2026",
+      "source_type": "peer_reviewed_publication",
+      "manuscript_citation": "23.\tYoon, Y. J., Sarkis, R. & Lee, J. W. Cenobamate in older adults with drug-resistant epilepsy: Real-world tolerability, efficacy, and predictors of discontinuation. Seizure 141, 109–115 (2026). doi:10.1016/j.seizure.2026.07.012.",
+      "actual_title": "Cenobamate in older adults with drug-resistant epilepsy: Real-world tolerability, efficacy, and predictors of discontinuation",
+      "authors": "Yoon YJ, Sarkis R, Lee JW.",
+      "journal_or_agency": "Seizure",
+      "publication_year": 2026,
+      "doi": "10.1016/j.seizure.2026.07.012",
+      "pmid": "42468323",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/42468323/",
+      "doi_metadata_url": "https://api.crossref.org/works/10.1016%2Fj.seizure.2026.07.012",
+      "europe_pmc_query_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI%3A10.1016%2Fj.seizure.2026.07.012&format=json&resultType=core",
+      "metadata_verification": {
+        "status": "VERIFIED",
+        "method": "Compared Europe PMC PubMed record with the Crossref DOI metadata and final manuscript: exact normalized title, first author, journal and cited issue year.",
+        "title_matches_manuscript_after_punctuation_and_diacritics_normalization": true,
+        "title_matches_crossref_after_punctuation_and_diacritics_normalization": true,
+        "first_author_matches_crossref": true,
+        "journal_matches_crossref": true,
+        "issue_year_matches": true,
+        "crossref_title": "Cenobamate in older adults with drug-resistant epilepsy: Real-world tolerability, efficacy, and predictors of discontinuation",
+        "crossref_first_author": "Yoon",
+        "crossref_journal": "Seizure: European Journal of Epilepsy",
+        "crossref_published": {
+          "date-parts": [
+            [
+              2026,
+              9
+            ]
+          ]
+        },
+        "crossref_published_print": {
+          "date-parts": [
+            [
+              2026,
+              9
+            ]
+          ]
+        },
+        "crossref_published_online": null,
+        "crossref_volume": "141",
+        "crossref_pages_or_article_number": "109-115",
+        "notes": [
+          "Publisher abstract reports adjusted OR 1.26 with 95% CI 0.89–1.78 and p=0.025, and adjusted OR 1.27 with 95% CI 0.93–1.72 and p=0.013. The reported confidence intervals cross 1 while the p-values are <0.05; this numerical inconsistency warrants confirmation with the authors/publisher and should not be resolved by inference."
+        ]
+      },
+      "original_app_doi": "10.1016/j.seizure.2026.07.012",
+      "original_app_pmid": "42468323",
+      "doi_changed_from_original": false,
+      "pmid_changed_from_original": false
+    }
+  ]
+}
