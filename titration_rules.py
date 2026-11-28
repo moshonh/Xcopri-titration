@@ -52,22 +52,37 @@ CLOBAZAM_ABOVE_20_FACTORS = tuple(map(Decimal, ("1", "1", "1", ".75", ".75", ".5
 CLOBAZAM_AT_MOST_20_FACTORS = (Decimal("1"),) * 6
 CLOBAZAM_THRESHOLD_MG = Decimal("20")
 
-# Provisional, explicit whitelist only. The existing clinical overlay cites the
-# EMA Ontozry SmPC (EMA2021), section 4.5, for no clinically relevant PK
-# interaction in the studied settings. This is an app hold, not an EMA schedule.
+# These drugs receive specific cautions in addition to the general no-rule
+# hold. The existing clinical overlay cites the EMA Ontozry SmPC (EMA2021),
+# section 4.5, for no clinically relevant PK interaction in studied settings.
+# This is an app hold, not an EMA schedule or proof of safety.
 _NON_TAPER_NO_RELEVANT_PK_HOLD_DRUGS = frozenset({"Levetiracetam", "Valproate (VPA)"})
 
 _LIMIT = 1000  # Technical precision/range limit; not a clinical dose limit.
 _REVIEW = (
-    "Unvalidated author-defined or physician-entered review material; not a "
-    "prescription and not a clinically validated dose. A treating clinician "
-    "must assess the patient, interactions, timing, formulation and local label; "
-    "individual clinical action may be needed before cenobamate 100 mg/day."
+    "IMPORTANT: The planned cenobamate 100 mg/day threshold is an unvalidated "
+    "custom app rule, not a guideline or safety mandate; actual cenobamate "
+    "dosing is not checked. Some adverse effects or interactions can require "
+    "earlier clinician-led action outside the app; "
+    "do not delay medical care. Unvalidated author-defined or physician-entered "
+    "review material; not a prescription and not a clinically validated dose. "
+    "A treating clinician must assess the patient, interactions, timing, "
+    "formulation and local label."
 )
 _THEORETICAL = (
     "Daily values are unrounded theoretical mg/day totals; no formulation, "
     "tablet strength or tablet splitting is inferred. AM/PM administration "
-    "timing requires an explicit clinician choice."
+    "timing requires an explicit clinician choice. These are not final "
+    "clinically feasible or administration-ready doses."
+)
+_NO_TAPER_RULE_HOLD_NOTE = (
+    "No established tapering protocol/rule for this medication; baseline dose "
+    "maintained unchanged—adjust based on clinical judgment."
+)
+_BASELINE_HOLD_CAUTION = (
+    "IMPORTANT: An unchanged baseline is not an assurance of safety. A clinician "
+    "must assess the patient, adverse effects, interactions, applicable labeling "
+    "and the need for an individualized change."
 )
 _AUTOMATIC_REDUCTION_CAUTION = (
     "IMPORTANT: These unvalidated author-defined reductions assume the planned "
@@ -226,6 +241,40 @@ def _manual_values(drug: str, values: Sequence[OptionalNumberInput]) -> tuple[De
     return tuple(_number(value, f"{drug} manual period {index + 1}") for index, value in enumerate(values))
 
 
+def _check_manual_early_periods(drug: str, baseline: Decimal | None,
+                                values: tuple[Decimal | None, ...]) -> None:
+    """Reject identifiable early reductions without inventing missing doses.
+
+    A positive known baseline is needed for any early entry. Compare each
+    known early period to the last known value across blanks, starting at the
+    baseline. This enforces an app planning restriction, not clinical safety.
+    """
+    early = tuple((index, value) for index, value in enumerate(values)
+                  if CENOBAMATE_PERIOD_DOSES[index] < Decimal("100") and value is not None)
+    if not early:
+        return
+    if baseline is None or baseline <= 0:
+        raise ValueError(
+            f"{drug}: a positive baseline is required for any manual entry before planned "
+            "cenobamate 100 mg/day; otherwise leave those early periods blank, which "
+            "is an incomplete plan and not an assurance of safety. This is an unvalidated "
+            "app rule, not a guideline or safety mandate, and must not delay clinically "
+            "needed care; earlier clinician-led action may be "
+            "needed outside the app."
+        )
+    previous = baseline
+    for index, value in early:
+        if value < previous:
+            raise ValueError(
+                f"{drug} manual {_period_context(index)} is a reduction from the baseline "
+                "or previous known early period. Planned reductions cannot begin before "
+                "planned cenobamate 100 mg/day under this unvalidated app rule, not a "
+                "guideline or safety mandate. "
+                "Do not delay medical care; earlier clinician-led action may be needed outside the app."
+            )
+        previous = value
+
+
 def _check_lamotrigine_manual_taper(baseline: Decimal | None, values: tuple[Decimal | None, ...]) -> None:
     """Enforce the selected lamotrigine taper's no-increase constraint only.
 
@@ -237,13 +286,15 @@ def _check_lamotrigine_manual_taper(baseline: Decimal | None, values: tuple[Deci
     if all(value is None for value in values):
         return
     if baseline is None or baseline <= 0:
-        raise ValueError("A positive lamotrigine baseline is required to enter a selected lamotrigine taper")
+        raise ValueError("A positive lamotrigine baseline is required to enter a selected lamotrigine taper. "
+                         "Do not delay medical care; earlier clinician-led action may be needed outside the app.")
     previous = baseline
     for value in values:
         if value is None:
             continue
         if value > previous:
-            raise ValueError("A selected lamotrigine taper cannot increase at any entered period")
+            raise ValueError("A selected lamotrigine taper cannot increase at any entered period. "
+                             "Do not delay medical care; earlier clinician-led action may be needed outside the app.")
         previous = value
 
 
@@ -273,10 +324,15 @@ def build_schedules(
     ``manual_schedules`` maps any selected drug to exactly six physician-entered
     values; None is an unfilled period, and 0 is an intentional entry. Such a
     schedule entirely supersedes automatic rules, including the selected SCB
-    taper. For a selected lamotrigine taper only, known manual values must not
-    increase relative to the baseline or any previous known period. This
-    conflict check does not establish clinical safety. Otherwise manual values
-    can be recorded even when baseline is missing, with a prominent caution.
+    taper. For every manual drug, a positive baseline is required if any of the
+    first three periods is entered, and known early entries cannot decrease
+    relative to baseline or a previous known early entry, including across
+    blanks. Later entries can be made without a positive baseline, with a
+    caution, except for the selected lamotrigine taper: all its known manual
+    values must not increase relative to baseline or a previous known period,
+    and any entered value requires a positive baseline. These checks do not
+    establish clinical safety; earlier clinician-led action may be required
+    outside the app and medical care must not be delayed.
 
     Set ``automatic_scope_confirmed=True`` only after the calling application
     has affirmatively verified every prerequisite of its calculation path,
@@ -287,11 +343,12 @@ def build_schedules(
     the caller may impose stricter display restrictions on all schedules.
 
     The six periods assume cenobamate 12.5, 25, 50, 100, 150 and 200 mg/day,
-    respectively, each for two weeks. Automatic reductions start at period 4,
-    planned cenobamate 100 mg/day; actual cenobamate dosing is not checked. The
-    clinician may need to act earlier for an individual patient. No post-12-week
-    doses or completion dates are inferred. These rules are unvalidated author
-    suggestions, not FDA labeling or Delphi-panel requirements.
+    respectively, each for two weeks. Planned reductions, including manual
+    entries, start no earlier than period 4, planned cenobamate 100 mg/day;
+    actual cenobamate dosing is not checked. This is an unvalidated custom app
+    rule, not a clinical guideline or safety mandate; clinicians may need to
+    act earlier outside the app. Do not delay medical care. No post-12-week
+    doses or completion dates are inferred.
 
     Automatic rules require a strictly positive baseline. Missing or zero
     baseline yields six None values, including periods whose rule would have
@@ -300,11 +357,11 @@ def build_schedules(
     carbamazepine, for which automatic values are withheld pending interaction
     review. Their planned values remain incomplete until an individual plan is
     entered. A baseline hold does not establish safety or account for interactions.
-    Clobazam retains its
-    separate default. Levetiracetam and Valproate (VPA), when not selected for
-    taper, have a provisional baseline hold for review based on the existing
-    overlay's limited PK evidence. If selected for taper they have no automatic
-    numeric rule. Other unsupported medications require manual input. Neither
+    Clobazam retains its separate default, including a baseline hold at or
+    below 20 mg/day even if selected for taper. Other medications without a
+    predefined taper rule hold baseline for review unless selected for taper;
+    a selected taper without a numeric rule remains unspecified. Levetiracetam
+    and Valproate (VPA) also retain specific provisional PK cautions. Neither
     symptoms nor serum values alter these rules.
 
     Raises ValueError on invalid values, mismatched drug selections, invalid
@@ -333,15 +390,17 @@ def build_schedules(
         if drug not in parsed_baselines:
             raise ValueError(f"Manual schedule drug {drug} is not selected")
         parsed_manual[drug] = _manual_values(drug, values)
+    for drug, values in parsed_manual.items():
+        _check_manual_early_periods(drug, parsed_baselines[drug], values)
     if taper_drug == "Lamotrigine" and taper_drug in parsed_manual:
         _check_lamotrigine_manual_taper(parsed_baselines[taper_drug], parsed_manual[taper_drug])
 
     output: dict[str, DoseSchedule] = {}
     for drug, baseline in parsed_baselines.items():
         is_taper = drug == taper_drug
-        if drug == "Phenytoin" and not is_taper:
+        if drug == "Phenytoin":
             extra = (_PHENYTOIN_NON_TAPER_CAUTION,)
-        elif drug == "Carbamazepine" and not is_taper:
+        elif drug == "Carbamazepine":
             extra = (_CARBAMAZEPINE_NON_TAPER_CAUTION,)
         else:
             extra = ()
@@ -398,11 +457,9 @@ def build_schedules(
                 extra_cautions=extra,
             )
             continue
-        has_rule = (drug in SCB_DRUGS or drug == "Clobazam" or
-                    (drug in _NON_TAPER_NO_RELEVANT_PK_HOLD_DRUGS and not is_taper))
-        if not has_rule:
-            reason = ("No automatic taper is defined for this selected medication; physician-entered values are needed."
-                      if is_taper else "No automatic schedule is defined for this medication; physician-entered values are needed.")
+        has_taper_rule = drug in SCB_DRUGS or drug == "Clobazam"
+        if is_taper and not has_taper_rule:
+            reason = "No automatic taper is defined for this selected medication; physician-entered values are needed."
             output[drug] = _make(drug, baseline, (None,) * 6, "no_automatic_rule", "No automatic rule", reason, (reason,) * 6)
             continue
         if baseline is None or baseline <= 0:
@@ -427,7 +484,7 @@ def build_schedules(
                       f"zero = {value} mg/day; author-defined theoretical value, clinical review required."
                       for index, (deduction, value) in enumerate(zip(deductions, values))),
                 "fixed_step", deductions,
-                extra_cautions=_post_12_week_note(values) + (_AUTOMATIC_REDUCTION_CAUTION, _CARBAMAZEPINE_TIMING_CAUTION),
+                extra_cautions=_post_12_week_note(values) + extra + (_AUTOMATIC_REDUCTION_CAUTION, _CARBAMAZEPINE_TIMING_CAUTION),
             )
             continue
         if is_taper and drug in SCB_TAPER_FACTORS:
@@ -447,6 +504,10 @@ def build_schedules(
             code, label = "baseline_hold", "Baseline unchanged (review interactions)"
             reason = ("Unvalidated baseline hold for review only; an unchanged dose is not an assurance of safety. "
                       "A treating clinician must review interactions and determine whether a change is needed.")
+            if drug in {"Zonisamide", "Rufinamide"}:
+                reason += (" An author-defined selected-taper suggestion exists but is unvalidated "
+                           "and is not an established protocol. Within this app: " + _NO_TAPER_RULE_HOLD_NOTE)
+                extra = (_NO_TAPER_RULE_HOLD_NOTE, _BASELINE_HOLD_CAUTION)
         elif drug in _NON_TAPER_NO_RELEVANT_PK_HOLD_DRUGS:
             factors = (Decimal("1"),) * len(PERIOD_LABELS)
             code, label = "baseline_hold", "Provisional baseline unchanged (EMA PK evidence; review interactions)"
@@ -454,9 +515,10 @@ def build_schedules(
                       "schedule. The existing clinical content overlay cites the EMA Ontozry SmPC "
                       "section 4.5 (EMA2021) for no clinically relevant pharmacokinetic interaction "
                       "identified in the studied setting. An unchanged dose is not an assurance of "
-                      "safety; a clinician must review tolerability, other medications and interactions.")
-            extra = (_NO_RELEVANT_PK_HOLD_CAUTION, _NO_RELEVANT_PK_DRUG_CAUTIONS[drug])
-        else:
+                      "safety; a clinician must review tolerability, other medications and interactions. "
+                      "Within this app: " + _NO_TAPER_RULE_HOLD_NOTE)
+            extra = (_NO_TAPER_RULE_HOLD_NOTE, _NO_RELEVANT_PK_HOLD_CAUTION, _NO_RELEVANT_PK_DRUG_CAUTIONS[drug])
+        elif drug == "Clobazam":
             factors = CLOBAZAM_ABOVE_20_FACTORS if baseline > CLOBAZAM_THRESHOLD_MG else CLOBAZAM_AT_MOST_20_FACTORS
             code, label = "author_clobazam", "Unvalidated author-defined clobazam suggestion"
             if baseline > CLOBAZAM_THRESHOLD_MG:
@@ -468,6 +530,13 @@ def build_schedules(
                 if is_taper:
                     reason += " A chosen taper at or below the threshold requires physician-entered values."
             extra = ("The 20 mg/day threshold is not a validated safety cutoff; lower doses may also require individualized review or change.",)
+        else:
+            factors = (Decimal("1"),) * len(PERIOD_LABELS)
+            code, label = "baseline_hold", "Baseline unchanged (review interactions)"
+            reason = ("Unvalidated baseline hold for review only; an unchanged dose is not an assurance of safety. "
+                      "A treating clinician must review interactions and determine whether a change is needed. "
+                      "Within this app: " + _NO_TAPER_RULE_HOLD_NOTE)
+            extra = (_NO_TAPER_RULE_HOLD_NOTE, _BASELINE_HOLD_CAUTION)
         values = tuple(_mul_exact(baseline, factor) for factor in factors)
         reduction_rule = code == "author_scb_taper" or (code == "author_clobazam" and baseline > CLOBAZAM_THRESHOLD_MG)
         if reduction_rule:
