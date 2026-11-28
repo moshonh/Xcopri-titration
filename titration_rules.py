@@ -52,6 +52,11 @@ CLOBAZAM_ABOVE_20_FACTORS = tuple(map(Decimal, ("1", "1", "1", ".75", ".75", ".5
 CLOBAZAM_AT_MOST_20_FACTORS = (Decimal("1"),) * 6
 CLOBAZAM_THRESHOLD_MG = Decimal("20")
 
+# Provisional, explicit whitelist only. The existing clinical overlay cites the
+# EMA Ontozry SmPC (EMA2021), section 4.5, for no clinically relevant PK
+# interaction in the studied settings. This is an app hold, not an EMA schedule.
+_NON_TAPER_NO_RELEVANT_PK_HOLD_DRUGS = frozenset({"Levetiracetam", "Valproate (VPA)"})
+
 _LIMIT = 1000  # Technical precision/range limit; not a clinical dose limit.
 _REVIEW = (
     "Unvalidated author-defined or physician-entered review material; not a "
@@ -83,6 +88,26 @@ _PHENYTOIN_NON_TAPER_CAUTION = (
     "An unchanged baseline is not an assurance of safety; the treating clinician "
     "must assess the interaction and the individual patient."
 )
+_CARBAMAZEPINE_NON_TAPER_CAUTION = (
+    "IMPORTANT: Cenobamate may decrease carbamazepine exposure. The FDA label "
+    "advises increasing carbamazepine as needed for reduced efficacy, while the EMA SmPC says no "
+    "routine adjustment is required. Additive sodium-channel-blocker adverse "
+    "effects can favor reduction for tolerability. A clinician must assess "
+    "seizure control, adverse effects, other medications and applicable labels "
+    "and decide the individual plan; no universal numeric change is inferred."
+)
+_NO_RELEVANT_PK_HOLD_CAUTION = (
+    "The existing clinical content overlay cites the EMA Ontozry SmPC section 4.5 "
+    "(EMA2021): no clinically relevant pharmacokinetic interaction was identified "
+    "in the studied setting. This provisional app baseline hold is not an "
+    "EMA-endorsed dose schedule or proof of safety. A clinician must review "
+    "tolerability, pharmacodynamic effects, other medications and their "
+    "interactions, and applicable labels; patient-specific changes may be needed."
+)
+_NO_RELEVANT_PK_DRUG_CAUTIONS = {
+    "Levetiracetam": "Review CNS and behavioral tolerability and seizure control.",
+    "Valproate (VPA)": "Review hepatic safety and clinical tolerability.",
+}
 _CARBAMAZEPINE_TIMING_CAUTION = (
     "The unvalidated author-defined fixed-step taper first reduces carbamazepine "
     "in weeks 7–8, at the planned cenobamate dose of 100 mg/day. This timing "
@@ -271,10 +296,15 @@ def build_schedules(
     Automatic rules require a strictly positive baseline. Missing or zero
     baseline yields six None values, including periods whose rule would have
     produced zero. Non-taper SCBs hold baseline for review, except lamotrigine,
-    which retains its separate author-defined increase, and phenytoin, for which
-    automatic values are withheld pending interaction review. A baseline hold
-    does not establish safety or account for interactions. Clobazam retains its
-    separate default. Other selected medications require manual input. Neither
+    which retains its separate author-defined increase, and phenytoin and
+    carbamazepine, for which automatic values are withheld pending interaction
+    review. Their planned values remain incomplete until an individual plan is
+    entered. A baseline hold does not establish safety or account for interactions.
+    Clobazam retains its
+    separate default. Levetiracetam and Valproate (VPA), when not selected for
+    taper, have a provisional baseline hold for review based on the existing
+    overlay's limited PK evidence. If selected for taper they have no automatic
+    numeric rule. Other unsupported medications require manual input. Neither
     symptoms nor serum values alter these rules.
 
     Raises ValueError on invalid values, mismatched drug selections, invalid
@@ -309,7 +339,12 @@ def build_schedules(
     output: dict[str, DoseSchedule] = {}
     for drug, baseline in parsed_baselines.items():
         is_taper = drug == taper_drug
-        extra = (_PHENYTOIN_NON_TAPER_CAUTION,) if drug == "Phenytoin" and not is_taper else ()
+        if drug == "Phenytoin" and not is_taper:
+            extra = (_PHENYTOIN_NON_TAPER_CAUTION,)
+        elif drug == "Carbamazepine" and not is_taper:
+            extra = (_CARBAMAZEPINE_NON_TAPER_CAUTION,)
+        else:
+            extra = ()
         if drug in parsed_manual:
             values = parsed_manual[drug]
             notes = () if baseline is not None and baseline > 0 else (
@@ -341,7 +376,30 @@ def build_schedules(
                 extra_cautions=extra,
             )
             continue
-        has_rule = drug in SCB_DRUGS or drug == "Clobazam"
+        if drug == "Carbamazepine" and not is_taper:
+            reason = (
+                "No automatic carbamazepine values are provided: cenobamate may decrease "
+                "carbamazepine exposure. The FDA label advises increasing as needed for reduced efficacy; "
+                "the EMA SmPC says no routine dose adjustment is required. Additive "
+                "sodium-channel-blocker adverse effects can favor reduction. A clinician "
+                "must decide the individual plan; no universal numeric change is inferred. "
+                "All six planned values are unspecified and the plan remains incomplete "
+                "until a clinician enters an individual schedule."
+            )
+            if baseline is None:
+                reason += " Baseline is missing."
+            elif baseline <= 0:
+                reason += " Baseline is zero."
+            if not automatic_scope_confirmed:
+                reason += " Required calculation-scope confirmation is absent."
+            output[drug] = _make(
+                drug, baseline, (None,) * 6, "interaction_review_required",
+                "Carbamazepine interaction: clinician review required", reason, (reason,) * 6,
+                extra_cautions=extra,
+            )
+            continue
+        has_rule = (drug in SCB_DRUGS or drug == "Clobazam" or
+                    (drug in _NON_TAPER_NO_RELEVANT_PK_HOLD_DRUGS and not is_taper))
         if not has_rule:
             reason = ("No automatic taper is defined for this selected medication; physician-entered values are needed."
                       if is_taper else "No automatic schedule is defined for this medication; physician-entered values are needed.")
@@ -389,6 +447,15 @@ def build_schedules(
             code, label = "baseline_hold", "Baseline unchanged (review interactions)"
             reason = ("Unvalidated baseline hold for review only; an unchanged dose is not an assurance of safety. "
                       "A treating clinician must review interactions and determine whether a change is needed.")
+        elif drug in _NON_TAPER_NO_RELEVANT_PK_HOLD_DRUGS:
+            factors = (Decimal("1"),) * len(PERIOD_LABELS)
+            code, label = "baseline_hold", "Provisional baseline unchanged (EMA PK evidence; review interactions)"
+            reason = ("Provisional unvalidated app baseline hold for review only, not an EMA-endorsed "
+                      "schedule. The existing clinical content overlay cites the EMA Ontozry SmPC "
+                      "section 4.5 (EMA2021) for no clinically relevant pharmacokinetic interaction "
+                      "identified in the studied setting. An unchanged dose is not an assurance of "
+                      "safety; a clinician must review tolerability, other medications and interactions.")
+            extra = (_NO_RELEVANT_PK_HOLD_CAUTION, _NO_RELEVANT_PK_DRUG_CAUTIONS[drug])
         else:
             factors = CLOBAZAM_ABOVE_20_FACTORS if baseline > CLOBAZAM_THRESHOLD_MG else CLOBAZAM_AT_MOST_20_FACTORS
             code, label = "author_clobazam", "Unvalidated author-defined clobazam suggestion"

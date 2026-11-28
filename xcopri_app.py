@@ -25,7 +25,7 @@ from clinical_content import apply_clinical_content
 from titration_rules import build_schedules
 from dose_timing import split_daily_values
 
-APP_VERSION = "1.4"
+APP_VERSION = "1.5"
 APP_LAST_UPDATED = "November 2026"
 
 # This is the input schema only, not a legacy clinical-information registry.
@@ -240,6 +240,12 @@ REDUCTION_TIMING_NOTE = (
     '(weeks 7–8). Actual cenobamate dosing is not tracked; verify that 100 mg/day has been reached. '
     'This is an unvalidated app rule, not a universal clinical threshold. Adverse effects or interactions '
     'may require earlier individualized action. Detectable early physician-entered reductions are flagged for review.'
+)
+BASELINE_DISPLAY_NOTE = (
+    'For some medications that are not selected for taper, the entered baseline is displayed unchanged '
+    'as a starting point for review. This does not establish an absence of interactions or clinical safety. '
+    'Review adverse effects, all co-medications and the drug-specific information. Where no numerical '
+    'rule is defined, values may be left unspecified for the clinician to decide.'
 )
 SAFETY_FLAGS = [
     {'title': 'Serious hypersensitivity / DRESS', 'body': (
@@ -498,7 +504,7 @@ def _pdf_text(value) -> str:
 
 
 def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str, extra_drugs: tuple = (),
-             schedule_metadata=None, cascade_warnings=(), timing_warnings=()) -> bytes:
+             schedule_metadata=None, cascade_warnings=(), timing_warnings=(), medication_warnings=()) -> bytes:
     """Escaped export with key safety warnings, without shared patient-data caching."""
     patient = {key: value for key, value in patient_frozen if 'contracept' not in str(key).casefold() and 'contracept' not in str(value).casefold()}
     selected_frozen = tuple(item for item in selected_frozen if 'contracept' not in str(item[0]).casefold())
@@ -565,6 +571,7 @@ def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str, extra_
         'They are author-defined, unvalidated suggestions, not Delphi- or FDA-endorsed numerical schedules and not prescriptions. '
         'Physician-entered values are also unvalidated review material. The clinician must independently assess every value.'), body))
     story.append(Paragraph(_pdf_text(REDUCTION_TIMING_NOTE), body))
+    story.append(Paragraph(_pdf_text(BASELINE_DISPLAY_NOTE), body))
     for drug, meta in (schedule_metadata or {}).items():
         if drug not in {item[0] for item in selected_frozen}:
             continue
@@ -577,6 +584,8 @@ def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str, extra_
         story.append(Paragraph(_pdf_text('Inducer-washout warning: ' + warning), body))
     for warning in timing_warnings:
         story.append(Paragraph(_pdf_text('Titration-timing review: ' + warning), body))
+    for warning in medication_warnings:
+        story.append(Paragraph(_pdf_text('Medication review: ' + warning), body))
     story.append(Paragraph('Unvalidated reference and review values', head))
     story.append(Paragraph('AM/PM amounts are shown only when the clinician selected a twice-daily schedule; equal splits are theoretical and manual amounts are clinician-entered. No rounding or tablet splitting is inferred. Verify formulation and feasibility.', body))
     for _, row in df.iterrows():
@@ -867,7 +876,7 @@ with tab4:
     authority = ('The numerical co-medication suggestions are author-defined rules based on the app authors’ clinical experience. '
                  'They are unvalidated, not prescriptions, and are not numerical schedules endorsed by Delphi or FDA. '
                  'The treating clinician must independently assess all values, risks, labeling and formulations. '
-                 + REDUCTION_TIMING_NOTE)
+                 + REDUCTION_TIMING_NOTE + ' ' + BASELINE_DISPLAY_NOTE)
     st.warning(authority)
     scenario = st.selectbox('Scenario', ['Author-defined suggestions', 'Physician-customized values'], key='plan_scenario')
     change_drugs = []
@@ -915,7 +924,7 @@ with tab4:
                     with b:
                         pm.append(st.number_input(f'{drug} — {week} evening (mg)', min_value=0.0, max_value=1000000.0, value=None, format='%.6f', key=f'timing_pm_{drug}_{i}'))
                 manual_timing[drug] = {'morning': am, 'evening': pm}
-    context = {'age': age, 'sex': sex, 'weight': weight, 'epilepsy': epilepsy, 'egfr': egfr,
+    context = {'app_version': APP_VERSION, 'age': age, 'sex': sex, 'weight': weight, 'epilepsy': epilepsy, 'egfr': egfr,
                'renal': renal, 'liver': liver, 'short_qt': short_qt, 'target': target,
                'pregnancy': pregnancy, 'selected': selected, 'taper': taper_choice,
                'show_reference': show_schedule, 'scenario': scenario,
@@ -978,11 +987,27 @@ with tab4:
             for warning in cascade_messages:
                 st.warning(warning)
             timing_messages = _manual_early_reduction_warnings(schedules)
+            medication_messages = []
+            for drug, result in schedules.items():
+                if result.source_code in ('no_automatic_rule', 'interaction_review_required'):
+                    info = DRUG_DB[drug]
+                    medication_messages.append(
+                        f'{drug}: no numerical schedule is supplied. '
+                        f'Interaction context: {info["mechanism"]} '
+                        f'Clinical review: {info["action"]}. '
+                        'The clinician may enter a personalized schedule. Unspecified is not zero or a stop instruction.'
+                    )
+            for warning in medication_messages:
+                st.warning(warning)
             if ('Phenytoin' in schedules and taper_choice != 'Phenytoin'):
                 st.warning('Phenytoin: cenobamate can raise concentrations. An unchanged dose is not necessarily safe; review levels, adverse effects and the applicable label. If no individual plan is entered, the dose remains unspecified in this table.')
             if (taper_choice == 'Carbamazepine' and 'Carbamazepine' in schedules
                     and schedules['Carbamazepine'].source_code == 'author_scb_taper'):
                 timing_messages.append('Carbamazepine taper timing: the app rule reduces by 200 mg/day at each two-week interval beginning when cenobamate reaches 100 mg/day. This timing is not an FDA or Delphi requirement. The clinician must decide whether and when to taper and may replace the schedule.')
+            if (taper_choice == 'Clobazam' and 'Clobazam' in schedules
+                    and schedules['Clobazam'].source_code == 'author_clobazam'
+                    and schedules['Clobazam'].baseline is not None and schedules['Clobazam'].baseline <= 20):
+                timing_messages.append('Clobazam selected for taper at a baseline of 20 mg/day or less: this app default does not specify a reduction, and the displayed values are unchanged. The clinician may enter an individualized plan.')
             for drug, result in schedules.items():
                 automatic_reduction = (result.source_code == 'author_scb_taper' or
                     (result.source_code == 'author_clobazam' and result.baseline is not None and result.baseline > 20))
@@ -1046,6 +1071,7 @@ with tab4:
                 export_df['Interaction review'] = interaction_review
                 export_df['Inducer-washout warnings'] = ' | '.join(cascade_messages) if cascade_messages else 'No selected inducer-washout warning identified; this does not establish safety.'
                 export_df['Titration-timing review'] = ' | '.join(timing_messages) if timing_messages else 'No individual early-reduction timing warning identified; this does not establish safety.'
+                export_df['Individual medication review'] = ' | '.join(medication_messages) if medication_messages else 'No additional unspecified numerical schedule identified; this does not establish safety.'
                 for drug, result in schedules.items():
                     export_df[f'{drug} source_label'] = result.source_label
                     export_df[f'{drug} administration schedule'] = selected[drug].get('timing')
@@ -1070,7 +1096,8 @@ with tab4:
                 with col2:
                     try:
                         pdf = make_pdf(tuple(patient.items()), frozen, df.to_json(), schedule_metadata=metadata,
-                                       cascade_warnings=cascade_messages, timing_warnings=timing_messages)
+                                       cascade_warnings=cascade_messages, timing_warnings=timing_messages,
+                                       medication_warnings=medication_messages)
                         st.download_button('Download review PDF', data=pdf, file_name='cenobamate_review.pdf', mime='application/pdf')
                     except Exception as exc:
                         st.error(f'PDF export unavailable: {exc}')
