@@ -8,6 +8,7 @@ Run with: streamlit run xcopri_app.py
 import io
 import os
 import re
+from dataclasses import replace
 import streamlit as st
 import pandas as pd
 from datetime import date
@@ -22,8 +23,9 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from references_data import REFERENCES, PAPER_LIST
 from clinical_content import apply_clinical_content
 from titration_rules import build_schedules
+from dose_timing import split_daily_values
 
-APP_VERSION = "1.2"
+APP_VERSION = "1.4"
 APP_LAST_UPDATED = "November 2026"
 
 # This is the input schema only, not a legacy clinical-information registry.
@@ -226,10 +228,19 @@ from xml.sax.saxutils import escape as xml_escape
 
 XCOP_SCHEDULE = [12.5, 25, 50, 100, 150, 200]
 WEEK_LABELS = ['Weeks 1-2', 'Weeks 3-4', 'Weeks 5-6', 'Weeks 7-8', 'Weeks 9-10', 'Weeks 11-12']
+TIMING_UNSPECIFIED = 'Not confirmed / other schedule'
+TIMING_EQUAL = 'Twice daily — equal morning and evening'
+TIMING_MANUAL = 'Twice daily — enter morning and evening amounts'
 FDA_LABEL = 'https://www.accessdata.fda.gov/drugsatfda_docs/label/2025/212839s013lbl.pdf'
 EMA_LABEL = 'https://www.ema.europa.eu/en/documents/product-information/ontozry-epar-product-information_en.pdf'
 DISCLAIMER = ('UNVALIDATED DECISION SUPPORT - NOT A PRESCRIPTION OR CLINICAL ORDER. '
               'All decisions and formulation checks belong to the treating clinician.')
+REDUCTION_TIMING_NOTE = (
+    'The authors’ automatic reduction suggestions begin at the planned cenobamate 100 mg/day step '
+    '(weeks 7–8). Actual cenobamate dosing is not tracked; verify that 100 mg/day has been reached. '
+    'This is an unvalidated app rule, not a universal clinical threshold. Adverse effects or interactions '
+    'may require earlier individualized action. Detectable early physician-entered reductions are flagged for review.'
+)
 SAFETY_FLAGS = [
     {'title': 'Serious hypersensitivity / DRESS', 'body': (
         'DRESS can be fatal. Fever or lymphadenopathy can occur without rash. Evaluate immediately. '
@@ -310,7 +321,7 @@ def serum_alert(drug: str, val) -> str:
     if val is None:
         return ''
     return (f'Serum value entered for {drug}: clinical review only. Interpret units, sampling time, baseline, reference '
-            'range, symptoms, seizures and interactions. Serum values do not trigger an accelerated taper or change the author-defined rules.')
+            'range, symptoms, seizures and interactions. Serum values do not trigger an accelerated taper or change the app rules.')
 
 
 # The number in the citation maps the overlay's key to the manuscript-ordered
@@ -422,29 +433,63 @@ def _decimal_text(value):
     return text or '0'
 
 
+def _check_widget_amount(value, name):
+    """Reject precision beyond what is displayed by the dose-input widgets."""
+    if value is not None and Decimal(str(value)).as_tuple().exponent < -6:
+        raise ValueError(f'{name}: enter no more than six decimal places; no automatic rounding is performed')
+
+
+def _manual_early_reduction_warnings(schedules):
+    """Flag identifiable early physician-entered reductions without changing them."""
+    warnings = []
+    for drug, schedule in schedules.items():
+        if schedule.source_code != 'physician_manual':
+            continue
+        early_values = schedule.values[:3]  # cenobamate 12.5, 25 and 50 mg/day
+        if not any(value is not None for value in early_values):
+            continue
+        previous = schedule.baseline if schedule.baseline is not None and schedule.baseline > 0 else None
+        if previous is None:
+            warnings.append(
+                f'{drug}: baseline missing or zero; whether the first manual value before cenobamate '
+                '100 mg/day is a reduction cannot be determined. Review the early plan.'
+            )
+        for index, value in enumerate(early_values):
+            if value is None:
+                continue
+            if previous is not None and value < previous:
+                warnings.append(
+                    f'{drug}: physician-entered reduction before cenobamate 100 mg/day '
+                    f'({WEEK_LABELS[index]}, reference {_decimal_text(Decimal(str(XCOP_SCHEDULE[index])))} mg/day). '
+                    'The default starts at 100 mg/day; earlier individualized changes may be clinically needed. '
+                    'Review the reason, interactions and tolerability.'
+                )
+                break
+            previous = value
+    return warnings
+
+
 def _schedule_cell(schedule, index):
     value = schedule.values[index]
-    origin = ('Physician-entered, unvalidated' if schedule.source_code == 'physician_manual'
-              else 'Author-defined, unvalidated' if schedule.source_code.startswith('author_')
-              else schedule.source_label)
-    return f'{origin}: {_decimal_text(value)} mg/day' if value is not None else f'{origin}: Not specified'
+    return f'{_decimal_text(value)} mg/day' if value is not None else 'Not specified'
 
 
-def build_df(selected_frozen: tuple, schedules=None) -> pd.DataFrame:
-    """Generic cenobamate reference and selected-drug review values; caller enforces scope."""
+def build_df(selected_frozen: tuple, schedules=None, timing_splits=None) -> pd.DataFrame:
+    """Show daily totals and explicit AM/PM divisions selected by the clinician."""
     schedules = schedules or {}
+    timing_splits = timing_splits or {}
     rows = []
     for index, (week, dose) in enumerate(zip(WEEK_LABELS, XCOP_SCHEDULE)):
         row = {'Week': week, 'Xcopri (Cenobamate)': f'{dose:g} mg/day'}
         for drug, _dose, _serum in selected_frozen:
             row[drug] = _schedule_cell(schedules[drug], index) if drug in schedules else 'Not specified'
+            if drug in timing_splits:
+                morning, evening = timing_splits[drug]
+                for title, values in (('AM', morning), ('PM', evening)):
+                    value = values[index]
+                    row[f'{drug} — {title} (mg)'] = f'{_decimal_text(value)} mg' if value is not None else 'Not specified'
         rows.append(row)
     return pd.DataFrame(rows)
-
-
-def build_me_df(selected_frozen: tuple, df_json: str, taper_drug: str = None) -> pd.DataFrame:
-    """Return daily totals unchanged; never infer timing or tablet splits."""
-    return pd.read_json(io.StringIO(df_json))
 
 
 def _pdf_text(value) -> str:
@@ -453,7 +498,7 @@ def _pdf_text(value) -> str:
 
 
 def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str, extra_drugs: tuple = (),
-             schedule_metadata=None, cascade_warnings=()) -> bytes:
+             schedule_metadata=None, cascade_warnings=(), timing_warnings=()) -> bytes:
     """Escaped export with key safety warnings, without shared patient-data caching."""
     patient = {key: value for key, value in patient_frozen if 'contracept' not in str(key).casefold() and 'contracept' not in str(value).casefold()}
     selected_frozen = tuple(item for item in selected_frozen if 'contracept' not in str(item[0]).casefold())
@@ -519,17 +564,21 @@ def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str, extra_
     story.append(Paragraph(_pdf_text('The numerical co-medication rules reflect the app authors’ clinical experience. '
         'They are author-defined, unvalidated suggestions, not Delphi- or FDA-endorsed numerical schedules and not prescriptions. '
         'Physician-entered values are also unvalidated review material. The clinician must independently assess every value.'), body))
+    story.append(Paragraph(_pdf_text(REDUCTION_TIMING_NOTE), body))
     for drug, meta in (schedule_metadata or {}).items():
         if drug not in {item[0] for item in selected_frozen}:
             continue
         story.append(Paragraph(f'<b>{_pdf_text(drug)}:</b> {_pdf_text(meta["source_label"])}', body))
+        story.append(Paragraph(_pdf_text('Administration schedule as selected: ' + str(meta.get('timing') or 'Not specified')), body))
         story.append(Paragraph(_pdf_text('Reason: ' + meta['reason']), body))
         for caution in meta['cautions']:
             story.append(Paragraph(_pdf_text('Caution: ' + caution), body))
     for warning in cascade_warnings:
         story.append(Paragraph(_pdf_text('Inducer-washout warning: ' + warning), body))
+    for warning in timing_warnings:
+        story.append(Paragraph(_pdf_text('Titration-timing review: ' + warning), body))
     story.append(Paragraph('Unvalidated reference and review values', head))
-    story.append(Paragraph('Daily totals only; no rounding, administration-time division or tablet splitting is inferred. Verify local formulation and feasibility.', body))
+    story.append(Paragraph('AM/PM amounts are shown only when the clinician selected a twice-daily schedule; equal splits are theoretical and manual amounts are clinician-entered. No rounding or tablet splitting is inferred. Verify formulation and feasibility.', body))
     for _, row in df.iterrows():
         story.append(Paragraph(f"<b>{_pdf_text(row.get('Week', 'Period'))}</b>", body))
         for col, val in row.items():
@@ -725,7 +774,7 @@ with tab1:
 
 with tab2:
     st.subheader('Current medications in the supported inventory')
-    st.caption('Enter total daily doses. Everolimus is included for tuberous sclerosis complex-associated seizures; other medicines are not comprehensively covered. Optional serum values are for review only.')
+    st.caption('Enter total daily doses and specify the administration schedule for each medication. Only choose twice daily when appropriate for the actual formulation and patient. Optional serum values are for review only. Everolimus is included for TSC-associated seizures; other medicines are not comprehensively covered.')
     selected = {}
     for drug, info in DRUG_DB.items():
         if info.get('conditional_on_pregnancy'):
@@ -733,19 +782,24 @@ with tab2:
         with st.expander(drug):
             if st.checkbox(f'Patient currently receives {drug}', key=f'chk_{drug}'):
                 unit = info.get('unit') or 'units'
-                dose = st.number_input(f'{drug} total daily dose ({unit}/day)', min_value=0.0, value=None, key=f'dose_{drug}')
+                dose = st.number_input(f'{drug} total daily dose ({unit}/day)', min_value=0.0, max_value=1000000.0, value=None, format='%.6f', key=f'dose_{drug}')
+                timing = st.selectbox(f'{drug} administration schedule',
+                                      [TIMING_UNSPECIFIED, TIMING_EQUAL, TIMING_MANUAL], key=f'timing_{drug}')
                 serum = None
                 if info.get('has_serum'):
                     serum = st.number_input(f'{drug} serum value (optional; verify units and sampling)', min_value=0.0, value=None, key=f'serum_{drug}')
                 if dose is not None:
                     st.caption('Verify dose and local formulation; this tool does not validate a dose or tablet split.')
-                selected[drug] = {'dose': dose, 'serum': serum}
+                selected[drug] = {'dose': dose, 'serum': serum, 'timing': timing}
     st.session_state['selected_drugs'] = selected
 
 previous_selected = set(st.session_state.get('_previous_selected_drugs', []))
 for removed in previous_selected - set(selected):
+    st.session_state.pop(f'timing_{removed}', None)
     for idx in range(6):
         st.session_state.pop(f'manual_{removed}_{idx}', None)
+        st.session_state.pop(f'timing_am_{removed}_{idx}', None)
+        st.session_state.pop(f'timing_pm_{removed}_{idx}', None)
 st.session_state['_previous_selected_drugs'] = list(selected)
 if st.session_state.get('scb_to_discontinue') not in set(selected) | {None, 'None selected'}:
     st.session_state['scb_to_discontinue'] = 'None selected'
@@ -761,7 +815,7 @@ with tab3:
             st.write(flag['body'])
             _render_sources([_reference_record(k) for k in flag['refs']])
     st.subheader('Drug interaction review')
-    st.info('The following content is for independent clinician review, not a prescription or validated algorithm. Risk categories are unvalidated; absence of a warning does not imply safety. Author-defined co-medication suggestions may be displayed in the review plan; they are not prescriptions.')
+    st.info('The following content is for independent clinician review, not a prescription or validated algorithm. Risk categories are unvalidated; absence of a warning does not imply safety.')
     if not selected:
         st.info('Select current medications in tab 2. A taper and a scenario are optional.')
     for drug, info in selected.items():
@@ -781,13 +835,13 @@ with tab3:
             _render_sources(_source_records(drug))
             if drug == 'Clobazam' and dose is not None:
                 if dose > 20:
-                    st.warning('Clobazam >20 mg/day: the unvalidated author-defined rule proposes a reduction for review. This is not a validated safety cutoff; clinician assessment is required.')
+                    st.warning('Clobazam >20 mg/day: the app proposes a reduction for review. This is not a validated safety cutoff; clinician assessment is required.')
                 else:
-                    st.warning('Clobazam ≤20 mg/day: the author-defined rule does not itself trigger a proactive reduction; this is not proof of safety and does not rule out an individualized reduction. Earlier review may be needed for adverse effects.')
+                    st.warning('Clobazam ≤20 mg/day: the app default does not itself trigger a proactive reduction; this is not proof of safety and does not rule out an individualized reduction. Earlier review may be needed for adverse effects.')
                     if dose >= 10:
                         st.info('For clobazam 10–20 mg/day, Smith et al. suggest considering a 5–10 mg/day reduction at cenobamate 100 mg/day when appropriate; clinician assessment is required.')
             if drug == 'Lamotrigine':
-                st.info('Cenobamate may reduce lamotrigine concentrations; response varies. An author-defined default may suggest an increase, but it is not validated or necessarily appropriate. Review seizure control, tolerability, interacting drugs and concentrations when useful.')
+                st.info('Cenobamate may reduce lamotrigine concentrations; response varies. The app may suggest an increase, but it is not validated or necessarily appropriate. Review seizure control, tolerability, interacting drugs and concentrations when useful.')
             if drug == 'Lacosamide' and dose is not None and dose >= 400:
                 st.warning('Lacosamide ≥400 mg/day: independently consider proactive reduction even if fewer than two pre-existing SCBs are listed. This does not mandate discontinuation or a particular taper.')
             if drug in CASCADE_DDI:
@@ -796,10 +850,10 @@ with tab3:
                 st.warning('Everolimus may be used for tuberous sclerosis complex-associated seizures. Review its interaction and indication with the prescribing specialist and pharmacist; this inventory is not a complete interaction screen.')
     scbs = get_active_scbs(selected)
     if len(scbs) >= 2:
-        st.warning('Two or more pre-cenobamate SCBs detected (' + ', '.join(scbs) + '). The Delphi panel recommends proactive down-titration or withdrawal, individualized to the patient; it does not mandate stopping an SCB or endorse author-defined dose rules. Balance tolerability and seizure control.')
+        st.warning('Two or more pre-cenobamate SCBs detected (' + ', '.join(scbs) + '). The Delphi panel recommends proactive down-titration or withdrawal, individualized to the patient; it does not mandate stopping an SCB or endorse this app’s numerical dose rules. Balance tolerability and seizure control.')
     elif len(scbs) == 1:
         st.info('One pre-cenobamate SCB detected. Added SCB effects can cause dizziness, diplopia or ataxia; the Delphi recommendation for regimens already containing at least two SCBs is not triggered.')
-    st.caption('The choice is optional. For supported drugs the review plan may show an unvalidated author-defined suggestion; it does not mandate a taper. Other drugs can be entered manually.')
+    st.caption('The choice is optional. The review plan may show an unvalidated suggestion; it does not mandate a taper. Other drugs can be entered manually.')
     taper_choice = st.selectbox('Drug the clinician is considering for taper (optional)', ['None selected'] + list(selected), key='scb_to_discontinue')
     for warning in get_cascade_warnings(taper_choice, selected):
         st.warning(f"Possible inducer-washout effect on {warning['drug']}: {warning['change']} {warning['action']}")
@@ -812,20 +866,33 @@ with tab4:
         st.error('No schedule displayed. Confirm adult age, normal hepatic and renal function, absence of familial short-QT/hypersensitivity, and a clinician-considered 200 mg/day target. eGFR below 60, a different target, impairment, pediatrics or unknowns are outside this calculation path. This restriction is tool scope, not the full label.')
     authority = ('The numerical co-medication suggestions are author-defined rules based on the app authors’ clinical experience. '
                  'They are unvalidated, not prescriptions, and are not numerical schedules endorsed by Delphi or FDA. '
-                 'The treating clinician must independently assess all values, risks, labeling and formulations.')
+                 'The treating clinician must independently assess all values, risks, labeling and formulations. '
+                 + REDUCTION_TIMING_NOTE)
     st.warning(authority)
     scenario = st.selectbox('Scenario', ['Author-defined suggestions', 'Physician-customized values'], key='plan_scenario')
     change_drugs = []
+    continue_drugs = []
     if scenario == 'Physician-customized values':
         change_drugs = st.multiselect('Medications to override with physician-entered values (optional)', list(selected), default=[], key='plan_change_drugs')
-        st.caption('Selected manual overrides replace all six automatic values for that drug. Other supported drugs retain their author-defined suggestions. A blank is unspecified, never an automatic hold or backfill; zero is an explicit entered value.')
+        st.caption('Selected manual overrides replace all six automatic values for that drug. Other supported drugs retain their defaults. A blank is unspecified, never an automatic hold or backfill; zero is an explicit entered value. When lamotrigine is selected for taper, its entered values cannot increase.')
         if not change_drugs:
-            st.info('No medication is selected for a manual override; author-defined suggestions remain in place for supported drugs.')
+            st.info('No medication is selected for a manual override; defaults remain in place for supported drugs.')
+        continuation_options = [d for d, info in selected.items()
+                                if d not in SCB_DRUGS and d != 'Clobazam' and d != taper_choice
+                                and d not in change_drugs and info.get('dose') is not None and info['dose'] > 0]
+        old_continuations = st.session_state.get('plan_continue_drugs', [])
+        valid_continuations = [d for d in old_continuations if d in continuation_options]
+        if valid_continuations != old_continuations:
+            st.session_state['plan_continue_drugs'] = valid_continuations
+        continue_drugs = st.multiselect('Other medications to continue at entered baseline for all periods (physician choice)',
+                                        continuation_options, default=[], key='plan_continue_drugs')
+        if continue_drugs:
+            st.caption('These values copy the entered daily dose for review; continuing unchanged is not a safety determination. Review interaction alerts and local labeling.')
     else:
-        st.caption('Author-defined suggestions are used for supported medications. Choose Physician-customized values to enter different values for specific medications.')
-    manual = {}
+        st.caption('Choose Physician-customized values to enter different values for specific medications.')
+    manual = {drug: [selected[drug]['dose']] * len(WEEK_LABELS) for drug in continue_drugs}
     if change_drugs:
-        st.warning('These physician-entered daily totals are unvalidated review material, not an order. Verify all amounts and formulations independently. No rounding, tablet splitting or administration-time division is performed.')
+        st.warning('These physician-entered daily totals are unvalidated review material, not an order. Verify all amounts and formulations independently. Timing is specified separately below.')
         for drug in change_drugs:
             unit = DRUG_DB[drug].get('unit') or 'units'
             with st.expander(f'{drug}: physician-entered daily totals for review', expanded=True):
@@ -833,13 +900,27 @@ with tab4:
                 values = []
                 for i, week in enumerate(WEEK_LABELS):
                     with cols[i % 3]:
-                        values.append(st.number_input(f'{drug} — {week} ({unit}/day)', min_value=0.0, value=None, key=f'manual_{drug}_{i}'))
+                        values.append(st.number_input(f'{drug} — {week} ({unit}/day)', min_value=0.0, max_value=1000000.0, value=None, format='%.6f', key=f'manual_{drug}_{i}'))
                 manual[drug] = values
+    manual_timing = {}
+    for drug, info in selected.items():
+        if info.get('timing') == TIMING_MANUAL:
+            with st.expander(f'{drug}: morning and evening amounts', expanded=True):
+                st.caption('Enter both amounts for each period; their sum must equal that period’s displayed total daily dose. A blank is not zero. If a daily total is unspecified, enter it in the physician-customized plan first.')
+                am, pm = [], []
+                for i, week in enumerate(WEEK_LABELS):
+                    a, b = st.columns(2)
+                    with a:
+                        am.append(st.number_input(f'{drug} — {week} morning (mg)', min_value=0.0, max_value=1000000.0, value=None, format='%.6f', key=f'timing_am_{drug}_{i}'))
+                    with b:
+                        pm.append(st.number_input(f'{drug} — {week} evening (mg)', min_value=0.0, max_value=1000000.0, value=None, format='%.6f', key=f'timing_pm_{drug}_{i}'))
+                manual_timing[drug] = {'morning': am, 'evening': pm}
     context = {'age': age, 'sex': sex, 'weight': weight, 'epilepsy': epilepsy, 'egfr': egfr,
                'renal': renal, 'liver': liver, 'short_qt': short_qt, 'target': target,
                'pregnancy': pregnancy, 'selected': selected, 'taper': taper_choice,
                'show_reference': show_schedule, 'scenario': scenario,
-               'change_drugs': change_drugs, 'manual': manual}
+               'change_drugs': change_drugs, 'continue_drugs': continue_drugs,
+               'manual': manual, 'manual_timing': manual_timing}
     fingerprint = hashlib.sha256(json.dumps(context, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     # A confirmation belongs to one unchanged, currently visible profile, not
     # a saved historical profile. Even a change followed by a revert needs review.
@@ -849,42 +930,96 @@ with tab4:
 
     if show_schedule and scope_ok:
         try:
+            for drug, info in selected.items():
+                _check_widget_amount(info.get('dose'), f'{drug} baseline')
+            for drug, values in manual.items():
+                for value in values:
+                    _check_widget_amount(value, f'{drug} daily dose')
+            for drug, sides in manual_timing.items():
+                for side, values in sides.items():
+                    for value in values:
+                        _check_widget_amount(value, f'{drug} {side} dose')
             schedules = build_schedules(
                 {drug: info.get('dose') for drug, info in selected.items()},
                 taper_drug=None if taper_choice == 'None selected' else taper_choice,
                 manual_schedules=manual, automatic_scope_confirmed=scope_ok)
+            for drug in continue_drugs:
+                schedules[drug] = replace(schedules[drug], source_code='physician_baseline_hold',
+                    source_label='Physician-selected baseline continuation',
+                    reason='The clinician selected the entered baseline dose for all six periods; review interactions and clinical appropriateness.',
+                    period_reasons=('Physician-selected baseline continuation; clinical review required.',) * len(WEEK_LABELS))
+            timing_splits = {}
+            timing_complete = True
+            for drug, info in selected.items():
+                if info.get('timing') == TIMING_EQUAL:
+                    timing_splits[drug] = split_daily_values(schedules[drug].values, 'equal')
+                elif info.get('timing') == TIMING_MANUAL:
+                    entries = manual_timing[drug]
+                    timing_splits[drug] = split_daily_values(schedules[drug].values, 'manual',
+                                                              morning=entries['morning'], evening=entries['evening'])
+                    am, pm = timing_splits[drug]
+                    if any(total is not None and (a is None or p is None)
+                           for total, a, p in zip(schedules[drug].values, am, pm)):
+                        timing_complete = False
         except ValueError as exc:
             st.session_state.pop('confirmed_plan_fingerprint', None)
             st.error(f'Invalid review plan: {exc}. Correct the inputs before reviewing or exporting.')
         else:
             frozen = tuple((d, info.get('dose'), info.get('serum')) for d, info in selected.items())
-            df = build_df(frozen, schedules)
+            df = build_df(frozen, schedules, timing_splits)
             cascade_messages = [f"Possible effect on {w['drug']} during withdrawal of {taper_choice}: {w['change']} {w['action']}"
                                 for w in get_cascade_warnings(taper_choice, selected)]
             if (taper_choice in CASCADE_DDI and 'Lamotrigine' in CASCADE_DDI[taper_choice]
                     and 'Lamotrigine' in schedules and schedules['Lamotrigine'].source_code == 'author_lamotrigine'):
                 cascade_messages.append(
                     f'IMPORTANT: Withdrawal of the inducer {taper_choice} may cause rising lamotrigine levels during washout. '
-                    'Assess potential rising lamotrigine exposure and reconsider the author-defined lamotrigine default; '
+                    'Assess potential rising lamotrigine exposure and reconsider the lamotrigine default; '
                     'do not assume an increase is appropriate. Review the patient and concentrations as clinically indicated.')
             for warning in cascade_messages:
                 st.warning(warning)
-            st.caption('Cenobamate reference: 12.5, 25, 50, 100, 150, 200 mg/day, each for two weeks. Its applicability must be independently assessed. Co-medication numbers are author-defined or physician-entered, as labeled, and are not validated.')
+            timing_messages = _manual_early_reduction_warnings(schedules)
+            if ('Phenytoin' in schedules and taper_choice != 'Phenytoin'):
+                st.warning('Phenytoin: cenobamate can raise concentrations. An unchanged dose is not necessarily safe; review levels, adverse effects and the applicable label. If no individual plan is entered, the dose remains unspecified in this table.')
+            if (taper_choice == 'Carbamazepine' and 'Carbamazepine' in schedules
+                    and schedules['Carbamazepine'].source_code == 'author_scb_taper'):
+                timing_messages.append('Carbamazepine taper timing: the app rule reduces by 200 mg/day at each two-week interval beginning when cenobamate reaches 100 mg/day. This timing is not an FDA or Delphi requirement. The clinician must decide whether and when to taper and may replace the schedule.')
+            for drug, result in schedules.items():
+                automatic_reduction = (result.source_code == 'author_scb_taper' or
+                    (result.source_code == 'author_clobazam' and result.baseline is not None and result.baseline > 20))
+                if automatic_reduction and result.values[-1] is not None and result.values[-1] > 0:
+                    timing_messages.append(f'{drug}: the final 12-week displayed dose remains above zero. No further doses or completion date are inferred; the clinician must decide whether and how to continue the taper.')
+            for warning in timing_messages:
+                st.warning(warning)
+            st.caption('Cenobamate reference: 12.5, 25, 50, 100, 150, 200 mg/day, each for two weeks. Its applicability must be independently assessed.')
             st.markdown('**Draft review table — not a prescription**')
+            def short_source(result):
+                if result.source_code == 'physician_manual':
+                    return 'physician-entered'
+                if result.source_code == 'physician_baseline_hold':
+                    return 'physician-selected baseline'
+                if result.source_code.startswith('author_'):
+                    return 'authors’ suggestion'
+                if result.source_code == 'baseline_hold':
+                    return 'baseline unchanged for review'
+                return 'unspecified / withheld'
+            if schedules:
+                st.caption('Dose source by medication: ' + ' | '.join(f'{d}: {short_source(r)}' for d, r in schedules.items()))
             st.dataframe(df, use_container_width=True, hide_index=True)
-            st.caption('Exact theoretical daily totals only; no rounding, AM/PM split, tablet splitting, strength or formulation is inferred. Verify local availability and feasibility with a pharmacist.')
+            st.caption('AM/PM amounts appear only for a clinician-selected twice-daily schedule. Equal splits are theoretical; unequal amounts may be entered manually. No rounding or tablet splitting is performed. Verify formulation, strengths and feasibility with a pharmacist.')
             metadata = {}
             for drug, result in schedules.items():
                 metadata[drug] = {'source_label': result.source_label, 'reason': result.reason,
-                                  'cautions': list(result.cautions)}
-                with st.expander(f'{drug}: source, reason and cautions', expanded=True):
+                                  'cautions': list(result.cautions), 'timing': selected[drug].get('timing')}
+                with st.expander(f'{drug}: source, reason and cautions', expanded=False):
                     st.write('Source: ' + result.source_label)
                     st.write('Reason: ' + result.reason)
-                    for caution in result.cautions:
+                    for caution in result.cautions[2:]:
                         st.warning(caution)
             st.subheader('Review and export')
             st.info('This is a draft. Review the complete current profile, potential taper, baseline doses, all six timepoints, mode, manual values and warnings before confirming. Any change, including reverting a change, requires a new review.')
-            if st.button('Confirm review of the complete current plan', key='confirm_plan_review'):
+            if not timing_complete:
+                st.warning('Complete both morning and evening amounts for every period with a known daily dose before confirming or exporting. Blank does not mean zero.')
+            if st.button('Confirm review of the complete current plan', key='confirm_plan_review', disabled=not timing_complete):
                 st.session_state['confirmed_plan_fingerprint'] = fingerprint
             if st.session_state.get('confirmed_plan_fingerprint') == fingerprint:
                 st.success('Review recorded for this unchanged plan. The material remains unvalidated and is not a prescription.')
@@ -905,13 +1040,15 @@ with tab4:
                     'potential taper: ' + taper_choice + '. Serum values prompt review only; they do not trigger accelerated taper. ' +
                     ' '.join(cascade_messages))
                 if 'Clobazam' in selected:
-                    interaction_review += ' Clobazam >20 mg/day is an unvalidated author-defined threshold, not a safety cutoff.'
+                    interaction_review += ' Clobazam >20 mg/day is an unvalidated app threshold, not a safety cutoff.'
                 if 'Lacosamide' in selected:
                     interaction_review += ' Lacosamide at 400 mg/day or more has a separate reduction consideration requiring review.'
                 export_df['Interaction review'] = interaction_review
                 export_df['Inducer-washout warnings'] = ' | '.join(cascade_messages) if cascade_messages else 'No selected inducer-washout warning identified; this does not establish safety.'
+                export_df['Titration-timing review'] = ' | '.join(timing_messages) if timing_messages else 'No individual early-reduction timing warning identified; this does not establish safety.'
                 for drug, result in schedules.items():
                     export_df[f'{drug} source_label'] = result.source_label
+                    export_df[f'{drug} administration schedule'] = selected[drug].get('timing')
                     export_df[f'{drug} reason'] = result.reason
                     export_df[f'{drug} cautions'] = ' | '.join(result.cautions)
                     export_df[f'{drug} period reason'] = list(result.period_reasons)
@@ -933,7 +1070,7 @@ with tab4:
                 with col2:
                     try:
                         pdf = make_pdf(tuple(patient.items()), frozen, df.to_json(), schedule_metadata=metadata,
-                                       cascade_warnings=cascade_messages)
+                                       cascade_warnings=cascade_messages, timing_warnings=timing_messages)
                         st.download_button('Download review PDF', data=pdf, file_name='cenobamate_review.pdf', mime='application/pdf')
                     except Exception as exc:
                         st.error(f'PDF export unavailable: {exc}')
@@ -951,4 +1088,4 @@ with tab5:
             if ref['pmid']:
                 st.write(ref['pmid'])
             st.caption(ref['relevance'])
-    st.caption('The software and its author-defined rules are unvalidated. Clinical judgment and independent verification remain necessary.')
+    st.caption('The software and its numerical rules are unvalidated. Clinical judgment and independent verification remain necessary.')
