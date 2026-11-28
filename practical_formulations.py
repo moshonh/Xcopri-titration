@@ -1,9 +1,9 @@
-"""Clinician-entered product data for unvalidated dose-review calculations.
+"""Product data for unvalidated dose-review calculations.
 
 This module does not assert registration, commercial supply, bioequivalence,
-scoring, permitted subdivision, dose accuracy, or clinical suitability.  It
-validates structural consistency of the clinician's independently verified
-inputs.  Missing attestation or incomplete product details fail closed.
+scoring, permitted subdivision, dose accuracy, or clinical suitability. It
+checks structural consistency and exact catalog-product constraints; manually
+entered data are not verified. Incomplete product details fail closed.
 """
 from __future__ import annotations
 
@@ -95,14 +95,21 @@ def _catalog_check(product: Formulation, drug: str | None, data: dict) -> Formul
     """Validate catalog constraints when a specific reviewed product was selected."""
     product_id = data.get('catalog_id') or ''
     if not product_id:
+        exact_caution = False
         for known_drug, entries in CATALOG.items():
             for entry in entries:
                 brand = entry['label'].split()[0]
                 if re.search(r'(?<![\w])' + re.escape(brand) + r'(?![\w])', product.name, re.IGNORECASE):
                     if known_drug != drug:
                         raise ValueError(f'this known product name is associated with {known_drug}, not the selected medication; verify the active ingredient and exact product')
-                    raise ValueError('this brand has a reviewed catalog entry; select the exact product in the reviewed-product selector. If this is a different formulation of the same brand, it requires separate catalog review before use in this tool')
-        return product  # clinician-entered outside reviewed catalog; never represented as verified by app
+                if (known_drug == drug and product.name.casefold() == entry['label'].casefold()
+                        and product.kind == entry['type'] and entry['rounding_policy'] == 'review_label'):
+                    exact_caution = True
+        if exact_caution:
+            # Retain the conservative label-specific rounding check, but do not
+            # turn an unverified custom entry into a catalog-verified product.
+            return replace(product, rounding_policy='review_label')
+        return product  # custom formulation, including known brands, is not catalog-verified
     matches = [entry for entry in CATALOG.get(drug, ()) if entry['id'] == product_id]
     if len(matches) != 1:
         raise ValueError('the selected product is not in this medication’s reviewed catalog')
@@ -126,22 +133,23 @@ def parse_formulation(data: dict, drug: str | None = None) -> Formulation:
     """Validate and capture explicit clinician-entered details, never invent them.
 
     Accepted shape matches xcopri_app's selected[drug]['formulation'] object.
-    A whole product strength may only be listed for halves or quarters where the
-    clinician explicitly confirms permission for that exact product and strength.
+    A whole product strength may only be listed for halves or quarters when it
+    has been explicitly entered for subdivision of that exact product. Catalog
+    entries are further checked against their product-specific permissions.
     Capsules and enteric-coated units cannot be split by this tool.  A liquid
-    needs the actual concentration and a separately confirmed deliverable syringe
-    increment; neither is inferred.  The confirmation is self-attestation, not
-    independent verification by this software.  Invalid input raises ValueError.
+    needs an explicit concentration and deliverable syringe increment; neither
+    is inferred. No source or attestation is required, and entered data are not
+    independently verified by this software. Invalid input raises ValueError.
     """
-    if not isinstance(data, dict) or data.get('confirmed') is not True:
-        raise ValueError('the clinician must confirm the exact local product, its label, supply and allowed subdivision')
+    if not isinstance(data, dict):
+        raise ValueError('product details are missing or invalid')
     name = str(data.get('name') or '').strip()
     kind = str(data.get('type') or '').strip()
+    # Retain the optional legacy field for data compatibility; no source is
+    # inferred, required, or asserted to have been supplied.
     reference = str(data.get('reference') or '').strip()
     if not name:
         raise ValueError('enter the exact product name, manufacturer and release form')
-    if not reference:
-        raise ValueError('enter the product label or pharmacist source and review date')
     if kind in {'Oral solution', 'Oral suspension'}:
         concentration = _number(data.get('concentration', ''), 'solution concentration (mg/mL)')
         increment = _number(data.get('increment', ''), 'deliverable syringe increment (mL)')

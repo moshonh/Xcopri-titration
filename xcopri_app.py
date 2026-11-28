@@ -24,10 +24,10 @@ from references_data import REFERENCES, PAPER_LIST
 from clinical_content import apply_clinical_content
 from titration_rules import build_schedules
 from dose_timing import split_daily_values
-from practical_plan import FORMULATION_ALERT, PRACTICAL_NOTE, practicalize_schedule
+from practical_plan import FORMULATION_ALERT, INTERNATIONAL_FORMULATION_WARNING, PRACTICAL_NOTE, practicalize_schedule
 from product_catalog import CATALOG
 
-APP_VERSION = "1.6"
+APP_VERSION = "1.7"
 APP_LAST_UPDATED = "November 2026"
 
 # This is the input schema only, not a legacy clinical-information registry.
@@ -595,6 +595,7 @@ def make_pdf(patient_frozen: tuple, selected_frozen: tuple, df_json: str, extra_
     story.append(Paragraph(_pdf_text(BASELINE_DISPLAY_NOTE), body))
     story.append(Paragraph(_pdf_text(PRACTICAL_NOTE), body))
     story.append(Paragraph(_pdf_text(FORMULATION_ALERT), body))
+    story.append(Paragraph(_pdf_text(INTERNATIONAL_FORMULATION_WARNING), body))
     for drug, meta in (schedule_metadata or {}).items():
         if drug not in {item[0] for item in selected_frozen}:
             continue
@@ -830,25 +831,24 @@ with tab1:
 with tab2:
     st.subheader('Current medications in the supported inventory')
     st.caption('Enter total daily doses and specify the administration schedule for each medication. Only choose twice daily when appropriate for the actual formulation and patient. Optional serum values are for review only. Everolimus is included for TSC-associated seizures; other medicines are not comprehensively covered.')
+    st.warning(INTERNATIONAL_FORMULATION_WARNING)
     st.warning(FORMULATION_ALERT + ' Film coating alone does not establish that a tablet cannot be split.')
-    st.caption('Enter one compatible same-named product and release form per medication. Do not mix different products or release formulations without independent pharmacist review. The app does not verify these inputs or the reference; the physician must independently check the current local label, reference and supply. Changing the product name or formulation type clears product-specific details and confirmation; changing any detail clears confirmation.')
+    st.caption('The preselected product is a reference, not proof that it is the actual product or is currently available. Check the actual product, release form, strengths and split permissions against the current local label. Select the matching product and available strengths, or enter an unlisted product. Custom entries are not verified by the app or represented as Israeli-label defaults. Do not mix different products or release forms without pharmacist review.')
 
     def _formulation_changed(drug, *, identity=False, type_changed=False):
         # Callbacks run before widgets are instantiated on the next rerun.
-        st.session_state[f'formulation_confirmed_{drug}'] = False
         if identity:
             st.session_state[f'formulation_type_{drug}'] = 'Not confirmed'
         if identity or type_changed:
-            for field in ('strengths', 'halves', 'quarters', 'concentration', 'increment', 'reference'):
+            for field in ('strengths', 'halves', 'quarters', 'concentration', 'increment'):
                 st.session_state[f'formulation_{field}_{drug}'] = ''
 
     def _catalog_changed(drug):
-        st.session_state[f'formulation_confirmed_{drug}'] = False
-        for field in ('name', 'strengths', 'halves', 'quarters', 'concentration', 'increment', 'reference'):
+        for field in ('name', 'strengths', 'halves', 'quarters', 'concentration', 'increment'):
             st.session_state[f'formulation_{field}_{drug}'] = ''
         st.session_state[f'formulation_type_{drug}'] = 'Not confirmed'
         for field in ('catalog_strengths', 'catalog_halves'):
-            st.session_state[f'{field}_{drug}'] = []
+            st.session_state.pop(f'{field}_{drug}', None)
 
     def _timing_changed(drug):
         # A changed actual regimen needs fresh per-administration amounts;
@@ -877,10 +877,10 @@ with tab2:
                 if dose is not None:
                     st.caption('Verify dose and local formulation; this tool does not validate a dose or tablet split.')
                 st.markdown('**Exact local product and formulation**')
-                other = 'Other / unlisted exact product — independently verify'
+                other = 'Other / custom local product — independently verify'
                 entries = CATALOG.get(drug, ())
                 catalog_label = st.selectbox(f'{drug} reviewed product reference',
-                    [other] + [item['label'] for item in entries], key=f'catalog_{drug}',
+                    [item['label'] for item in entries] + [other], key=f'catalog_{drug}',
                     on_change=_catalog_changed, args=(drug,))
                 profile = next((item for item in entries if item['label'] == catalog_label), None)
                 catalog_id = profile['id'] if profile else ''
@@ -893,7 +893,7 @@ with tab2:
                     is_solid = not is_liquid
                     if is_solid:
                         strength_list = st.multiselect(f'{drug} actual whole-unit strengths available for this product (mg)',
-                            list(profile['strengths']), default=[], key=f'catalog_strengths_{drug}',
+                            list(profile['strengths']), default=list(profile['strengths']), key=f'catalog_strengths_{drug}',
                             on_change=_formulation_changed, args=(drug,))
                         half_options = [x for x in profile['allowed_halves'] if x in strength_list]
                         old_halves = st.session_state.get(f'catalog_halves_{drug}', [])
@@ -901,7 +901,7 @@ with tab2:
                         if valid_halves != old_halves:
                             st.session_state[f'catalog_halves_{drug}'] = valid_halves
                         half_list = st.multiselect(f'{drug} explicitly selected halves of the allowed tablet strengths (mg)',
-                            half_options, default=[], key=f'catalog_halves_{drug}',
+                            half_options, default=half_options, key=f'catalog_halves_{drug}',
                             on_change=_formulation_changed, args=(drug,))
                         strengths, halves, quarters = ','.join(strength_list), ','.join(half_list), ''
                         concentration, increment = '', ''
@@ -912,7 +912,9 @@ with tab2:
                         increment = st.text_input(f'{drug} deliverable syringe increment (mL)',
                             key=f'formulation_increment_{drug}', on_change=_formulation_changed, args=(drug,))
                 else:
-                    st.warning('Unlisted product: the app has not verified the product, strengths or split permissions. Enter an exact independently verified label/source; never infer equal-dose subdivision from a score alone.')
+                    st.warning('Custom product settings are not verified by the app and are not the reviewed Israeli catalog profile, even if the brand name is the same. They may conflict with the reviewed product leaflet. Check the actual local product, release form, strengths and permitted divisions independently; never infer equal-dose subdivision from a score alone.')
+                    if not entries:
+                        st.warning('No reviewed Israeli product profile is available in this catalog for this medication. The custom details entered below are not sourced from an Israeli product leaflet by the app.')
                     name = st.text_input(f'{drug} exact local product / brand and release form',
                                          key=f'formulation_name_{drug}', on_change=_formulation_changed,
                                          args=(drug,), kwargs={'identity': True})
@@ -942,14 +944,6 @@ with tab2:
                     increment = st.text_input(f'{drug} deliverable syringe increment (mL)',
                                               key=f'formulation_increment_{drug}', disabled=not is_liquid,
                                               on_change=_formulation_changed, args=(drug,))
-                reference = st.text_input(f'{drug} exact product label / source link and date reviewed',
-                                          key=f'formulation_reference_{drug}', on_change=_formulation_changed,
-                                          args=(drug,), help='Independently verify this reference and the current local label; the app does not validate them.')
-                confirmed = st.checkbox(
-                    f'I personally verified the exact {drug} product, strengths and release type, '
-                    'score line and divisibility (if any), local applicability and current supply.',
-                    key=f'formulation_confirmed_{drug}',
-                    help='Clinician attestation only; the app does not verify the product, label, supply or entered details.')
                 selected[drug] = {
                     'dose': dose, 'serum': serum, 'timing': timing,
                     'formulation': {
@@ -957,8 +951,7 @@ with tab2:
                         'strengths': strengths if is_solid else '',
                         'halves': halves if is_tablet else '', 'quarters': quarters if is_tablet else '',
                         'concentration': concentration if is_liquid else '',
-                        'increment': increment if is_liquid else '', 'reference': reference,
-                        'confirmed': confirmed, 'catalog_id': catalog_id,
+                        'increment': increment if is_liquid else '', 'catalog_id': catalog_id,
                     },
                 }
     st.session_state['selected_drugs'] = selected
@@ -967,8 +960,8 @@ previous_selected = set(st.session_state.get('_previous_selected_drugs', []))
 for removed in previous_selected - set(selected):
     for field in ('dose', 'serum', 'timing', 'formulation_name', 'formulation_type',
                   'formulation_strengths', 'formulation_halves', 'formulation_quarters',
-                  'formulation_concentration', 'formulation_increment', 'formulation_reference',
-                  'formulation_confirmed', 'catalog', 'catalog_strengths', 'catalog_halves'):
+                  'formulation_concentration', 'formulation_increment',
+                  'catalog', 'catalog_strengths', 'catalog_halves'):
         st.session_state.pop(f'{field}_{removed}', None)
     for idx in range(6):
         for field in ('manual', 'timing_am', 'timing_pm'):
@@ -1209,6 +1202,7 @@ with tab4:
             for warning in practical_issues:
                 st.error(warning)
             st.warning(FORMULATION_ALERT)
+            st.warning(INTERNATIONAL_FORMULATION_WARNING)
             st.caption('Cenobamate reference: 12.5, 25, 50, 100, 150, 200 mg/day, each for two weeks. Its applicability must be independently assessed.')
             st.markdown('**Draft review table — not a prescription**')
             def short_source(result):
@@ -1280,6 +1274,7 @@ with tab4:
                 export_df['Titration-timing review'] = ' | '.join(timing_messages) if timing_messages else 'No individual early-reduction timing warning identified; this does not establish safety.'
                 export_df['Individual medication review'] = ' | '.join(medication_messages) if medication_messages else 'No additional unspecified numerical schedule identified; this does not establish safety.'
                 export_df['Formulation warning'] = FORMULATION_ALERT
+                export_df['International formulation warning'] = INTERNATIONAL_FORMULATION_WARNING
                 export_df['Practical dose limitations'] = PRACTICAL_NOTE
                 for drug, result in schedules.items():
                     export_df[f'{drug} source_label'] = result.source_label
